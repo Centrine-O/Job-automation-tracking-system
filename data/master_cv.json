@@ -1,0 +1,174 @@
+{
+  "personal": {
+    "name": "Centrine Ong'aria",
+    "email": "centyanita@gmail.com",
+    "phone": "+254 712 382 443",
+    "location": "Nairobi, Kenya",
+    "linkedin": "https://www.linkedin.com/in/centrine-ong-aria-aba21a343/",
+    "github": "https://github.com/Centrine-O/",
+    "portfolio": ""
+  },
+
+  "summary_variants": {
+    "data_analyst": "Data analyst and statistician with a BSc in Statistics from the University of Nairobi and hands-on experience in data collection, analysis, and reporting. Proficient in Python, SQL, Pandas, NumPy, and Excel. Background in monitoring and evaluation, AI dataset structuring, and building automated data pipelines. Experienced working cross-functionally in both U.S. and Kenyan organisations.",
+    "software_engineer": "Full Stack Developer with experience building and maintaining enterprise-grade web applications across banking, retail, and corporate sectors. Proficient in Python, JavaScript, React, Node.js, Django, Flask, and REST APIs. Experienced with Git-based workflows, CI pipelines, PostgreSQL, MySQL, and MongoDB. Background spans roles in U.S. and Kenyan companies.",
+    "ai_automation": "AI specialist and automation engineer with experience in LLM evaluation, dataset annotation, and building intelligent automation systems. Hands-on with Gemini API, Groq API, prompt engineering, and Python-based automation pipelines. Background includes AI evaluator roles at Sama Kenya and Digital Divide Data, multilingual dataset creation for model training, and full-stack development integrating AI-driven features."
+  },
+
+  "work_experience": [
+    {
+      "title": "Full Stack Developer",
+      "company": "Copy Cat Group",
+      "location": "Nairobi, Kenya",
+      "start_date": "November 2025",
+      "end_date": "Present",
+      "bullets": [
+        "Develop and maintain full-stack applications supporting enterprise clients across banking, retail, and corporate operations",
+        "Work with cross-functional teams to build scalable solutions, integrating internal APIs and customer-facing systems",
+        "Implement front-end improvements for usability, accessibility, and responsiveness across devices",
+        "Collaborate on backend logic, deployment, and troubleshooting through Git-based workflows and CI pipelines",
+        "Support integration of AI-driven automation features being adopted across internal business units"
+      ]
+    },
+    {
+      "title": "AI Data Annotator",
+      "company": "Sama Kenya",
+      "location": "Nairobi, Kenya",
+      "start_date": "October 2025",
+      "end_date": "January 2026",
+      "bullets": [
+        "Train AI models by generating accurate difference-based captions for multimodal datasets",
+        "Perform categorisation, bounding, consistency checks, and image-level validation to improve multimodal model accuracy",
+        "Contribute high-quality annotated outputs that directly feed into production AI model training pipelines"
+      ]
+    },
+    {
+      "title": "Full Stack Developer",
+      "company": "Cybasoft",
+      "location": "United States (Remote)",
+      "start_date": "June 2025",
+      "end_date": "November 2025",
+      "bullets": [
+        "Developed and delivered full-stack solutions for U.S.-based clients across different sectors",
+        "Built UI components, optimised APIs, and handled CMS-based website systems",
+        "Collaborated with remote teams to debug, improve performance, and implement client feedback"
+      ]
+    },
+    {
+      "title": "AI Data Annotation Specialist",
+      "company": "Digital Divide Data (DDD)",
+      "location": "Remote",
+      "start_date": "May 2025",
+      "end_date": "October 2025",
+      "bullets": [
+        "Annotated and evaluated datasets for health and agriculture AI systems",
+        "Performed intent detection, slot tagging, utterance verification, and structured dataset creation",
+        "Ensured annotation quality and consistency across multilingual and multimodal training data"
+      ]
+    },
+    {
+      "title": "AI Evaluator",
+      "company": "Sama Kenya",
+      "location": "Nairobi, Kenya",
+      "start_date": "September 2024",
+      "end_date": "December 2024",
+      "bullets": [
+        "Evaluated AI-generated content and contributed structured feedback to improve model accuracy",
+        "Assessed natural language response quality across diverse prompt categories",
+        "Contributed to model alignment and quality assurance pipelines"
+      ]
+    },
+    {
+      "title": "AI Expert Annotator",
+      "company": "Mindrift / Toloka",
+      "location": "Freelance (Remote)",
+      "start_date": "May 2024",
+      "end_date": "June 2025",
+      "bullets": [
+        "Created high-quality datasets and designed annotation instructions for multilingual model training",
+        "Performed pairwise ranking, difference-captioning, and image-based AI training tasks",
+        "Maintained annotation accuracy and delivered structured outputs for LLM and multimodal models"
+      ]
+    },
+    {
+      "title": "Web Developer & SEO Content Mentor",
+      "company": "Freelance",
+      "location": "Remote",
+      "start_date": "May 2024",
+      "end_date": "September 2024",
+      "bullets": [
+        "Built custom websites on WordPress and Wix with optimised performance and SEO structure",
+        "Mentored content writers on clarity, tone, and content structure for web audiences"
+      ]
+    },
+    {
+      "title": "Monitoring & Evaluation Staff",
+      "company": "Moja Expressway",
+      "location": "Nairobi, Kenya",
+      "start_date": "March 2022",
+      "end_date": "May 2023",
+      "bullets": [
+        "Collected and analysed road-use data and compiled monthly performance dashboard reports",
+        "Tracked KPIs and communicated findings to management to support operational decisions"
+      ]
+    },
+    {
+      "title": "Constituency Officer",
+      "company": "Uwezo Fund Oversight Board",
+      "location": "Kenya",
+      "start_date": "January 2020",
+      "end_date": "December 2020",
+      "bullets": [
+        "Reviewed grant applications, supported field vetting processes, and documented project progress",
+        "Maintained accurate records and coordinated reporting to county-level oversight structures"
+      ]
+    }
+  ],
+
+  "projects": [
+    {
+      "name": "Job Application Automation System",
+      "description": "Building a fully autonomous job application system using Python, Playwright, and LLM APIs that scrapes 8 job boards daily, scores jobs by skill match and hire probability, generates ATS-optimised CVs with a self-scoring loop achieving ≥85% keyword coverage, and submits applications automatically via email and web forms.",
+      "tech_stack": ["Python", "FastAPI", "SQLite", "Playwright", "Gemini API", "Groq API", "n8n", "Docker", "APScheduler", "ReportLab"],
+      "role": "Solo developer",
+      "outcome": "In development",
+      "date": "2026"
+    }
+  ],
+
+  "skills": {
+    "languages": ["Python", "JavaScript", "SQL", "PHP", "Kotlin", "Bash", "HTML", "CSS"],
+    "frameworks": ["React", "Node.js", "Django", "Flask"],
+    "databases": ["PostgreSQL", "MySQL", "MongoDB", "SQLite"],
+    "data": ["Pandas", "NumPy", "Excel", "Data Visualisation", "Statistical Analysis"],
+    "ai_ml": ["Gemini API", "Groq API", "Prompt Engineering", "LLM Evaluation", "Data Annotation", "Dataset Structuring"],
+    "automation": ["n8n", "Playwright", "APScheduler", "Web Scraping", "REST APIs"],
+    "tools": ["Git", "GitHub", "Postman", "VS Code", "Jira", "Trello", "Slack", "HubSpot", "Figma", "Docker"],
+    "cloud": ["Oracle Cloud", "Google Cloud Platform"]
+  },
+
+  "education": [
+    {
+      "degree": "Bachelor of Science in Statistics",
+      "institution": "University of Nairobi",
+      "location": "Nairobi, Kenya",
+      "year": "",
+      "grade": ""
+    }
+  ],
+
+  "certifications": [
+    {
+      "name": "Software Engineering",
+      "issuer": "Moringa School",
+      "year": ""
+    },
+    {
+      "name": "Virtual Assistant Program",
+      "issuer": "ALX Africa",
+      "year": ""
+    }
+  ],
+
+  "updated_at": "2026-04-27"
+}

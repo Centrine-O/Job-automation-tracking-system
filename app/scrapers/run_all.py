@@ -1,0 +1,33 @@
+"""Run all scrapers in sequence and print a combined summary."""
+from app.scrapers import remotive, weworkremotely, google_jobs
+
+
+def main():
+    print("=" * 55)
+    print("  JOB SCRAPER — running all sources")
+    print("=" * 55)
+
+    results = {}
+
+    for mod in [remotive, weworkremotely, google_jobs]:
+        name = mod.__name__.split(".")[-1]
+        print()
+        try:
+            new = mod.run()
+            results[name] = new
+        except Exception as e:
+            print(f"  [{name}] FAILED: {e}")
+            results[name] = 0
+
+    print()
+    print("=" * 55)
+    print("  SUMMARY")
+    print("=" * 55)
+    for name, new in results.items():
+        print(f"  {name:<20} {new:>4} new jobs")
+    print(f"  {'TOTAL':<20} {sum(results.values()):>4} new jobs")
+    print("=" * 55)
+
+
+if __name__ == "__main__":
+    main()

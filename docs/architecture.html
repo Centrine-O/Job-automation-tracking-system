@@ -1,0 +1,1907 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Job Automation System — Architecture</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#F6F2EB;
+  --surface:#FFFEFB;
+  --card:#FFFFFF;
+  --border:#E4DDD0;
+  --border-strong:#C8BBA8;
+  --text:#1C1812;
+  --muted:#8A7F72;
+  --navy:#1B2B4B;
+  --amber:#C4581A;
+  --amber-light:#FEF3E2;
+  --amber-mid:#F59E4A;
+  --blue:#1A4D8A;
+  --blue-light:#EFF4FB;
+  --purple:#5B3090;
+  --purple-light:#F3EDFC;
+  --teal:#1A6B55;
+  --teal-light:#EDFAF5;
+  --red:#B91C1C;
+  --red-light:#FEF2F2;
+  --green:#166534;
+  --green-light:#F0FDF4;
+  --slate:#374151;
+  --slate-light:#F9FAFB;
+  --shadow-sm:0 1px 3px rgba(27,43,75,0.07),0 2px 8px rgba(27,43,75,0.04);
+  --shadow:0 2px 6px rgba(27,43,75,0.08),0 8px 24px rgba(27,43,75,0.06);
+  --shadow-lg:0 8px 32px rgba(27,43,75,0.12);
+  --radius:12px;
+}
+
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:Georgia,'Times New Roman',serif;
+  font-size:15px;
+  line-height:1.65;
+  position:relative;
+}
+body::before{
+  content:'';
+  position:fixed;
+  inset:0;
+  background-image:radial-gradient(circle,#C8B9A0 1px,transparent 1px);
+  background-size:28px 28px;
+  opacity:0.25;
+  pointer-events:none;
+  z-index:0;
+}
+*{position:relative;z-index:1}
+
+/* ── TYPOGRAPHY ── */
+h1,h2,h3,h4,.syne{font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif}
+code,pre,.mono{font-family:Consolas,'Courier New',monospace}
+
+/* ── NAV ── */
+.nav{
+  position:sticky;top:0;z-index:200;
+  background:rgba(246,242,235,0.88);
+  backdrop-filter:blur(16px);
+  border-bottom:1px solid var(--border);
+  padding:0 40px;
+  display:flex;align-items:center;gap:0;
+  overflow-x:auto;
+  scrollbar-width:none;
+}
+.nav::-webkit-scrollbar{display:none}
+.nav-logo{
+  font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;
+  font-weight:700;font-size:0.82rem;
+  letter-spacing:0px;
+  color:var(--amber);
+  white-space:nowrap;
+  padding:14px 20px 14px 0;
+  border-right:1px solid var(--border);
+  margin-right:16px;
+  text-transform:uppercase;
+}
+.nav a{
+  font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;
+  font-size:0.74rem;
+  font-weight:700;
+  color:var(--muted);
+  text-decoration:none;
+  padding:14px 14px;
+  white-space:nowrap;
+  border-bottom:2px solid transparent;
+  transition:color .2s,border-color .2s;
+  letter-spacing:0.3px;
+}
+.nav a:hover{color:var(--amber);border-bottom-color:var(--amber)}
+
+/* ── HERO ── */
+.hero{
+  padding:80px 40px 64px;
+  max-width:900px;
+  margin:0 auto;
+  border-bottom:1px solid var(--border);
+}
+.hero-eyebrow{
+  font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;
+  font-size:0.75rem;
+  font-weight:600;
+  letter-spacing:1px;
+  text-transform:uppercase;
+  color:var(--amber);
+  margin-bottom:20px;
+  display:flex;align-items:center;gap:10px;
+}
+.hero-eyebrow::after{content:'';flex:1;height:1px;background:var(--border);max-width:200px}
+.hero h1{
+  font-size:clamp(2.4rem,6vw,4rem);
+  font-weight:800;
+  line-height:1.1;
+  letter-spacing:-1px;
+  color:var(--navy);
+  margin-bottom:20px;
+}
+.hero h1 em{
+  font-style:italic;
+  color:var(--amber);
+  font-family:Georgia,serif;
+}
+.hero-desc{
+  font-size:1.05rem;
+  color:var(--muted);
+  max-width:520px;
+  margin-bottom:36px;
+  font-style:italic;
+}
+.hero-stats{
+  display:flex;flex-wrap:wrap;gap:24px;
+  margin-bottom:32px;
+  padding:24px 0;
+  border-top:1px solid var(--border);
+  border-bottom:1px solid var(--border);
+}
+.hero-stat{display:flex;flex-direction:column;gap:2px}
+.hero-stat-num{
+  font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;
+  font-size:2rem;font-weight:800;
+  color:var(--navy);line-height:1;
+}
+.hero-stat-label{font-size:0.78rem;color:var(--muted);font-style:italic}
+.badges{display:flex;flex-wrap:wrap;gap:8px}
+.badge{
+  padding:5px 14px;
+  border-radius:999px;
+  font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;
+  font-size:0.72rem;font-weight:700;
+  letter-spacing:0.3px;
+  border:1px solid;
+}
+.badge-amber{color:var(--amber);border-color:var(--amber-mid);background:var(--amber-light)}
+.badge-blue{color:var(--blue);border-color:#93B4D8;background:var(--blue-light)}
+.badge-teal{color:var(--teal);border-color:#7EC9B4;background:var(--teal-light)}
+.badge-green{color:var(--green);border-color:#86EFAC;background:var(--green-light)}
+
+/* ── LAYOUT ── */
+.container{max-width:1100px;margin:0 auto;padding:0 40px}
+.section{padding:64px 0;border-bottom:1px solid var(--border)}
+.sec-label{
+  font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;
+  font-size:0.72rem;font-weight:600;
+  letter-spacing:1px;text-transform:uppercase;
+  color:var(--amber);margin-bottom:8px;
+}
+.sec-title{
+  font-size:1.8rem;font-weight:800;
+  color:var(--navy);letter-spacing:-0.5px;
+  margin-bottom:10px;
+}
+.sec-desc{color:var(--muted);font-style:italic;margin-bottom:40px;max-width:620px}
+
+/* ── GRID ── */
+.grid{display:grid;gap:20px}
+.g2{grid-template-columns:repeat(auto-fit,minmax(440px,1fr))}
+.g3{grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+.g4{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+
+/* ── CARDS ── */
+.card{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:24px;
+  box-shadow:var(--shadow-sm);
+}
+.card-accent-amber{border-top:3px solid var(--amber)}
+.card-accent-blue{border-top:3px solid var(--blue)}
+.card-accent-purple{border-top:3px solid var(--purple)}
+.card-accent-teal{border-top:3px solid var(--teal)}
+.card-accent-red{border-top:3px solid var(--red)}
+.card-accent-green{border-top:3px solid var(--green)}
+.card-accent-slate{border-top:3px solid var(--slate)}
+.card-title{font-size:1rem;font-weight:700;color:var(--navy);margin-bottom:6px}
+.card-sub{font-size:0.74rem;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
+.card p{color:var(--muted);font-size:0.88rem;line-height:1.7}
+
+/* ── TAGS / CHIPS ── */
+.tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+.tag{
+  padding:3px 10px;
+  border-radius:5px;
+  font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;
+  font-size:0.72rem;font-weight:700;
+  background:var(--bg);
+  color:var(--slate);
+  border:1px solid var(--border);
+}
+.tag-amber{background:var(--amber-light);color:var(--amber);border-color:var(--amber-mid)}
+.tag-blue{background:var(--blue-light);color:var(--blue);border-color:#93B4D8}
+.tag-purple{background:var(--purple-light);color:var(--purple);border-color:#C4A8E8}
+.tag-teal{background:var(--teal-light);color:var(--teal);border-color:#7EC9B4}
+.tag-green{background:var(--green-light);color:var(--green);border-color:#86EFAC}
+.tag-red{background:var(--red-light);color:var(--red);border-color:#FECACA}
+
+/* ═══════════════════════════════════════
+   PIPELINE FLOW DIAGRAM (Section 2)
+═══════════════════════════════════════ */
+.pflow{
+  max-width:780px;margin:0 auto;
+  display:flex;flex-direction:column;align-items:stretch;
+}
+.pflow-center{display:flex;justify-content:center}
+
+.pflow-trigger{
+  display:inline-flex;align-items:center;gap:14px;
+  background:var(--amber);color:white;
+  padding:13px 32px;border-radius:999px;
+  box-shadow:0 8px 28px rgba(196,88,26,0.35);
+}
+.pft-main{font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;font-weight:800;font-size:0.95rem}
+.pft-sub{font-size:0.76rem;opacity:0.85;font-style:italic}
+.pft-icon{font-size:1.4rem;flex-shrink:0}
+
+.pflow-conn{
+  width:2px;height:40px;
+  background:repeating-linear-gradient(to bottom,var(--amber) 0,var(--amber) 6px,transparent 6px,transparent 12px);
+  margin:0 auto;
+  position:relative;flex-shrink:0;
+}
+.pflow-conn::after{
+  content:'';position:absolute;bottom:-7px;left:50%;transform:translateX(-50%);
+  border-left:6px solid transparent;border-right:6px solid transparent;
+  border-top:8px solid var(--amber);
+}
+
+.pflow-layer{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  overflow:hidden;
+  box-shadow:var(--shadow-sm);
+}
+.pfl-head{
+  display:flex;align-items:center;gap:10px;
+  padding:13px 20px;
+  background:var(--bg);
+  border-bottom:1px solid var(--border);
+}
+.pfl-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.pfl-title{
+  font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;
+  font-weight:700;font-size:0.9rem;
+  color:var(--navy);flex:1;
+}
+.pfl-tech{
+  font-family:Consolas,'Courier New',monospace;
+  font-size:0.7rem;color:var(--muted);
+  background:var(--card);
+  border:1px solid var(--border);
+  padding:2px 8px;border-radius:4px;
+}
+.pfl-body{padding:16px 20px}
+.pfl-chips{display:flex;flex-wrap:wrap;gap:8px}
+.pfl-chip{
+  padding:5px 12px;border-radius:6px;
+  font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;
+  font-size:0.75rem;font-weight:700;
+  background:var(--bg);
+  color:var(--slate);
+  border:1px solid var(--border);
+}
+.pfl-flow-row{display:flex;align-items:center;flex-wrap:wrap;gap:8px}
+.chain-arr{
+  font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;
+  font-weight:700;color:var(--amber);font-size:1rem;
+}
+
+.gate-wrap{display:flex;flex-direction:column;align-items:center;gap:4px;flex-shrink:0}
+.gate-diamond{
+  width:76px;height:76px;
+  background:var(--amber-light);
+  border:2px solid var(--amber-mid);
+  transform:rotate(45deg);
+  display:flex;align-items:center;justify-content:center;
+}
+.gate-text{
+  transform:rotate(-45deg);
+  font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;
+  font-weight:800;font-size:0.65rem;
+  color:var(--amber);text-align:center;
+  line-height:1.4;
+}
+.gate-outcomes{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}
+.gate-yes{
+  padding:5px 14px;border-radius:6px;
+  font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;
+  font-size:0.75rem;font-weight:700;
+  background:var(--green-light);color:var(--green);border:1px solid #86EFAC;
+}
+.gate-no{
+  padding:5px 14px;border-radius:6px;
+  font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;
+  font-size:0.75rem;font-weight:700;
+  background:var(--red-light);color:var(--red);border:1px solid #FECACA;
+}
+
+.pflow-split{display:grid;grid-template-columns:1fr auto 1fr;gap:0;align-items:start}
+.split-or{
+  display:flex;align-items:center;justify-content:center;
+  padding:20px 14px;
+  font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;
+  font-weight:800;font-size:0.72rem;
+  color:var(--muted);letter-spacing:2px;
+  flex-shrink:0;
+}
+.pfl-body p{color:var(--muted);font-size:0.86rem}
+
+/* ═══════════════════════════════════════
+   STATE FLOW (Section 7)
+═══════════════════════════════════════ */
+.state-flow{overflow-x:auto;padding-bottom:8px}
+.sf-main{
+  display:flex;align-items:center;gap:0;
+  min-width:max-content;
+  padding:8px 0;
+}
+.sf-state{
+  display:flex;flex-direction:column;align-items:center;
+  gap:6px;
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:10px;
+  padding:14px 18px;
+  min-width:110px;
+  box-shadow:var(--shadow-sm);
+}
+.sf-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.sf-name{font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;font-weight:700;font-size:0.8rem;color:var(--navy);text-align:center}
+.sf-day{font-size:0.7rem;color:var(--muted);font-style:italic;text-align:center}
+.sf-arr{
+  padding:0 6px;
+  font-size:1.2rem;color:var(--border-strong);
+  display:flex;align-items:center;flex-shrink:0;
+}
+.sf-end-wrap{display:flex;gap:12px;flex-wrap:wrap;margin-top:20px}
+.sf-end{
+  display:flex;align-items:center;gap:8px;
+  padding:10px 16px;border-radius:8px;
+  font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;font-size:0.78rem;font-weight:700;
+  border:1px solid;
+}
+
+/* ── AI CHAIN ── */
+.ai-chain{display:flex;align-items:stretch;flex-wrap:wrap;gap:0}
+.ai-node{
+  flex:1;min-width:180px;
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:22px 20px;
+  position:relative;
+  box-shadow:var(--shadow-sm);
+}
+.ai-node:not(:last-child){margin-right:0;border-right:none;border-radius:var(--radius) 0 0 var(--radius)}
+.ai-node:not(:first-child):not(:last-child){border-radius:0}
+.ai-node:last-child{border-radius:0 var(--radius) var(--radius) 0}
+.ai-primary{border-top:3px solid var(--blue)}
+.ai-secondary{border-top:3px solid var(--purple)}
+.ai-fallback{border-top:3px solid var(--teal)}
+.ai-badge{
+  font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;
+  font-size:0.68rem;font-weight:600;
+  letter-spacing:0.5px;text-transform:uppercase;
+  padding:3px 8px;border-radius:4px;
+  display:inline-block;margin-bottom:10px;
+}
+.ai-name{font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;font-weight:800;font-size:1rem;color:var(--navy);margin-bottom:4px}
+.ai-detail{font-size:0.8rem;color:var(--muted);margin-bottom:10px}
+.ai-sep{
+  display:flex;align-items:center;
+  font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;
+  font-size:0.7rem;font-weight:700;
+  color:var(--muted);padding:0 12px;
+  flex-shrink:0;self-align:center;
+}
+.chain-wrap{display:flex;align-items:center;flex-wrap:wrap;gap:0}
+
+/* ── TABLES ── */
+table{width:100%;border-collapse:collapse;font-size:0.86rem}
+th{
+  text-align:left;padding:10px 14px;
+  background:var(--bg);
+  font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;
+  font-size:0.72rem;font-weight:600;
+  letter-spacing:0.3px;text-transform:uppercase;
+  color:var(--muted);
+  border-bottom:1px solid var(--border);
+}
+td{padding:11px 14px;border-bottom:1px solid var(--border);vertical-align:top;color:var(--text)}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#FAF8F4}
+td code{
+  background:var(--bg);
+  border:1px solid var(--border);
+  padding:1px 6px;border-radius:4px;
+  font-size:0.8rem;color:var(--navy);
+}
+.table-wrap{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  overflow:hidden;
+  box-shadow:var(--shadow-sm);
+}
+
+/* ── SCHEMA ── */
+.schema{display:grid;gap:20px}
+.schema-block{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow-sm)}
+.schema-head{
+  background:var(--bg);padding:12px 18px;
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:baseline;gap:10px;
+}
+.schema-tname{font-family:Consolas,'Courier New',monospace;font-weight:600;font-size:0.9rem;color:var(--navy)}
+.schema-tdesc{font-size:0.78rem;color:var(--muted);font-style:italic}
+.field-row{
+  display:grid;grid-template-columns:170px 100px 1fr;
+  gap:12px;padding:9px 18px;
+  border-bottom:1px solid var(--border);
+  font-size:0.82rem;align-items:baseline;
+}
+.field-row:last-child{border-bottom:none}
+.fname{font-family:Consolas,'Courier New',monospace;font-weight:600;color:var(--blue);font-size:0.8rem}
+.ftype{font-family:Consolas,'Courier New',monospace;color:var(--amber);font-size:0.76rem}
+.fdesc{color:var(--muted)}
+
+/* ── CODE BLOCK ── */
+.code-block{
+  background:var(--navy);
+  border-radius:var(--radius);
+  overflow:auto;
+  padding:28px;
+  font-family:Consolas,'Courier New',monospace;
+  font-size:0.82rem;
+  line-height:1.8;
+  box-shadow:var(--shadow-lg);
+  border:1px solid rgba(255,255,255,0.05);
+}
+.cb-comment{color:#5B7BA8}
+.cb-key{color:#93C5FD}
+.cb-val{color:#6EE7B7}
+.cb-str{color:#FCD34D}
+.cb-text{color:#CBD5E1}
+
+/* ── THREAT TABLE ── */
+.threat-row{
+  display:grid;grid-template-columns:200px 1fr 1fr;
+  gap:16px;padding:16px 0;
+  border-bottom:1px solid var(--border);
+  align-items:start;
+}
+.threat-row:last-child{border-bottom:none}
+.threat-name{font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;font-weight:700;font-size:0.88rem;color:var(--navy)}
+.threat-risk{font-size:0.83rem;color:var(--red);font-style:italic}
+.threat-fix{font-size:0.83rem;color:var(--teal)}
+
+/* ── BOARD CARDS ── */
+.board-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px}
+.board-card{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:10px;padding:18px 20px;
+  box-shadow:var(--shadow-sm);
+}
+.board-name{font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;font-weight:700;font-size:0.95rem;color:var(--navy);margin-bottom:4px}
+.board-region{font-size:0.76rem;color:var(--muted);margin-bottom:8px}
+.board-method{font-family:Consolas,'Courier New',monospace;font-size:0.71rem;color:var(--muted);background:var(--bg);border:1px solid var(--border);padding:2px 7px;border-radius:4px}
+
+/* ── PIPELINE STEPS (numbered) ── */
+.steps{display:flex;flex-direction:column;gap:0}
+.step{display:grid;grid-template-columns:40px 1fr;gap:16px;position:relative}
+.step:not(:last-child) .step-line{
+  position:absolute;left:19px;top:42px;bottom:0;
+  width:2px;background:var(--border);
+}
+.step-num{
+  width:40px;height:40px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;font-weight:800;font-size:0.85rem;
+  flex-shrink:0;position:relative;z-index:1;
+}
+.step-body{padding:4px 0 32px}
+.step-body h3{font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;font-size:0.95rem;font-weight:700;color:var(--navy);margin-bottom:4px}
+.step-body p{font-size:0.85rem;color:var(--muted)}
+
+/* ── FOOTER ── */
+footer{
+  text-align:center;padding:48px 40px;
+  border-top:1px solid var(--border);
+  color:var(--muted);font-size:0.82rem;
+  font-style:italic;
+}
+footer strong{font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;font-style:normal;color:var(--navy)}
+
+@media(max-width:680px){
+  .hero{padding:48px 20px 40px}
+  .container{padding:0 20px}
+  .nav{padding:0 20px}
+  .g2,.g3{grid-template-columns:1fr}
+  .pflow-split{grid-template-columns:1fr}
+  .split-or{display:none}
+  .threat-row{grid-template-columns:1fr}
+  .field-row{grid-template-columns:1fr 80px}
+  .field-row .fdesc{grid-column:1/-1}
+  .chain-wrap{flex-direction:column;align-items:stretch}
+  .ai-node:not(:last-child){border-right:1px solid var(--border);border-bottom:none;border-radius:var(--radius) var(--radius) 0 0}
+  .ai-node:last-child{border-radius:0 0 var(--radius) var(--radius)}
+  .ai-node:not(:first-child):not(:last-child){border-radius:0}
+}
+
+/* ── SERVICE CARDS (Section 11) ── */
+.svc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:16px;margin-top:28px}
+.svc-card{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-left:4px solid;
+  border-radius:var(--radius);
+  padding:22px 22px 18px;
+  box-shadow:var(--shadow-sm);
+  position:relative;
+  display:flex;flex-direction:column;gap:0;
+}
+.svc-amber{border-left-color:var(--amber)}
+.svc-blue{border-left-color:var(--blue)}
+.svc-purple{border-left-color:var(--purple)}
+.svc-teal{border-left-color:var(--teal)}
+.svc-navy{border-left-color:var(--navy)}
+.svc-num{
+  position:absolute;top:14px;right:18px;
+  font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;
+  font-weight:800;font-size:2rem;
+  color:var(--border);line-height:1;
+}
+.svc-name{
+  font-family:Consolas,'Courier New',monospace;
+  font-weight:700;font-size:1.05rem;
+  color:var(--navy);margin-bottom:2px;
+}
+.svc-type{
+  font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;
+  font-size:0.72rem;font-weight:600;
+  color:var(--muted);margin-bottom:12px;
+}
+.svc-desc{
+  font-size:0.84rem;color:var(--text);
+  line-height:1.65;margin-bottom:12px;
+  flex:1;
+}
+.svc-pills{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+.svc-pill{
+  padding:3px 9px;border-radius:4px;
+  font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;
+  font-size:0.69rem;font-weight:700;
+}
+.pill-green{background:var(--green-light);color:var(--green);border:1px solid #86EFAC}
+.pill-gray{background:var(--bg);color:var(--muted);border:1px solid var(--border)}
+.pill-amber{background:var(--amber-light);color:var(--amber);border:1px solid var(--amber-mid)}
+.pill-blue{background:var(--blue-light);color:var(--blue);border:1px solid #93B4D8}
+.pill-purple{background:var(--purple-light);color:var(--purple);border:1px solid #C4A8E8}
+.svc-vols{
+  border-top:1px solid var(--border);padding-top:10px;
+  display:flex;flex-direction:column;gap:5px;
+}
+.svc-vol{
+  font-size:0.78rem;color:var(--muted);
+  display:flex;align-items:baseline;gap:7px;
+}
+.svc-vol code{
+  font-size:0.74rem;color:var(--navy);
+  background:var(--bg);border:1px solid var(--border);
+  padding:1px 5px;border-radius:3px;flex-shrink:0;
+}
+
+/* ── FILE TREE (Section 13) ── */
+.ftree{display:flex;flex-direction:column;gap:8px}
+.ft-root-row{
+  background:var(--navy);color:white;
+  border-radius:var(--radius);
+  padding:12px 20px;
+  font-family:Consolas,'Courier New',monospace;
+  font-size:0.9rem;font-weight:700;
+  display:flex;align-items:center;gap:12px;
+}
+.ft-root-label{
+  margin-left:auto;
+  font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;
+  font-size:0.75rem;font-weight:400;
+  opacity:0.65;font-style:italic;
+}
+.ft-module{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:var(--radius);overflow:hidden;
+  box-shadow:var(--shadow-sm);
+}
+.ft-mhead{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 18px;
+  background:var(--bg);
+  border-bottom:1px solid var(--border);
+  border-left:4px solid;
+}
+.ftm-amber{border-left-color:var(--amber)}
+.ftm-blue{border-left-color:var(--blue)}
+.ftm-purple{border-left-color:var(--purple)}
+.ftm-teal{border-left-color:var(--teal)}
+.ftm-green{border-left-color:var(--green)}
+.ftm-navy{border-left-color:var(--navy)}
+.ftm-red{border-left-color:var(--red)}
+.ftm-slate{border-left-color:var(--slate)}
+.ft-mname{
+  font-family:Consolas,'Courier New',monospace;
+  font-weight:700;font-size:0.88rem;color:var(--navy);
+  flex-shrink:0;
+}
+.ft-mlabel{
+  font-size:0.76rem;color:var(--muted);font-style:italic;
+}
+.ft-mfiles{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(260px,1fr));
+}
+.ft-row{
+  display:flex;align-items:baseline;gap:8px;
+  padding:8px 18px;
+  border-bottom:1px solid var(--border);
+  border-right:1px solid var(--border);
+}
+.ft-row:last-child{border-bottom:none}
+.ft-fn{
+  font-family:Consolas,'Courier New',monospace;
+  font-size:0.78rem;font-weight:600;
+  color:var(--blue);white-space:nowrap;flex-shrink:0;
+}
+.ft-fd{font-size:0.76rem;color:var(--muted);font-style:italic}
+.ft-subfolder{
+  padding:7px 18px 4px;
+  background:rgba(246,242,235,0.6);
+  border-bottom:1px solid var(--border);
+  font-family:Consolas,'Courier New',monospace;
+  font-size:0.76rem;font-weight:600;color:var(--muted);
+  display:flex;align-items:center;gap:8px;
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav">
+  <div class="nav-logo">Job Automation</div>
+  <a href="#overview">Overview</a>
+  <a href="#flow">Architecture</a>
+  <a href="#sources">Job Sources</a>
+  <a href="#scoring">Scoring</a>
+  <a href="#cv">CV Engine</a>
+  <a href="#submit">Submission</a>
+  <a href="#tracking">Tracking</a>
+  <a href="#ai">AI Strategy</a>
+  <a href="#security">Security</a>
+  <a href="#schema">Schema</a>
+  <a href="#infra">Infrastructure</a>
+  <a href="#stack">Tool Stack</a>
+  <a href="#files">Files</a>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-eyebrow">Engine 1 of 3 &mdash; Phase 1</div>
+  <h1>Job Automation<br><em>System Design</em></h1>
+  <p class="hero-desc">Scrapes, scores, tailors, applies, and follows up — fully autonomous once deployed. You never touch a job board again.</p>
+  <div class="hero-stats">
+    <div class="hero-stat"><span class="hero-stat-num">8</span><span class="hero-stat-label">Job boards scraped daily</span></div>
+    <div class="hero-stat"><span class="hero-stat-num">7</span><span class="hero-stat-label">System layers</span></div>
+    <div class="hero-stat"><span class="hero-stat-num">15</span><span class="hero-stat-label">Max applications/day</span></div>
+    <div class="hero-stat"><span class="hero-stat-num">$0</span><span class="hero-stat-label">Monthly cost forever</span></div>
+    <div class="hero-stat"><span class="hero-stat-num">3</span><span class="hero-stat-label">AI models (fallback chain)</span></div>
+  </div>
+  <div class="badges">
+    <span class="badge badge-blue">Oracle Cloud Always Free</span>
+    <span class="badge badge-amber">Python + Playwright</span>
+    <span class="badge badge-teal">Gemini → Groq → Ollama</span>
+    <span class="badge badge-amber">n8n Self-Hosted</span>
+    <span class="badge badge-green">FastAPI Dashboard</span>
+  </div>
+</div>
+
+<!-- ═══ SECTION 1: OVERVIEW ═══ -->
+<section class="section" id="overview">
+<div class="container">
+  <div class="sec-label">01 &mdash; System Overview</div>
+  <h2 class="sec-title">Six engines, one autonomous machine</h2>
+  <p class="sec-desc">Each capability is isolated, testable, and replaceable. Together they form a pipeline that runs hands-off every morning.</p>
+
+  <div class="grid g3">
+    <div class="card card-accent-blue">
+      <div class="card-sub">Collect</div>
+      <div class="card-title">Discover Jobs Daily</div>
+      <p>8 job boards scraped every morning. Nairobi-local boards first, then global remote. Duplicate jobs identified by hash before any AI runs.</p>
+      <div class="tags">
+        <span class="tag tag-blue">MyJobKenya</span>
+        <span class="tag tag-blue">BrighterMonday</span>
+        <span class="tag tag-blue">LinkedIn</span>
+        <span class="tag tag-blue">Remotive</span>
+      </div>
+    </div>
+    <div class="card card-accent-purple">
+      <div class="card-sub">Score</div>
+      <div class="card-title">AI Match + Hire Probability</div>
+      <p>Two independent AI scores. Skill match (data analysis, software engineering, AI, automation) and hire probability — does this company hire Kenyans? Any visa blockers?</p>
+      <div class="tags">
+        <span class="tag tag-purple">Gemini API</span>
+        <span class="tag tag-purple">Groq API</span>
+        <span class="tag tag-purple">Ollama fallback</span>
+      </div>
+    </div>
+    <div class="card card-accent-teal">
+      <div class="card-sub">Apply</div>
+      <div class="card-title">Tailored CV + Auto-Submit</div>
+      <p>Generates a role-specific CV and cover letter for every qualifying job, then emails or fills the company's form via Playwright — no Easy Apply.</p>
+      <div class="tags">
+        <span class="tag tag-teal">Gmail API</span>
+        <span class="tag tag-teal">Playwright</span>
+        <span class="tag tag-teal">ReportLab PDF</span>
+      </div>
+    </div>
+    <div class="card card-accent-amber">
+      <div class="card-sub">Track</div>
+      <div class="card-title">Live Pipeline Dashboard</div>
+      <p>Every application logged in SQLite. A FastAPI dashboard served from your VPS lets you see the full pipeline — status, scores, dates — from any browser, in real time.</p>
+      <div class="tags">
+        <span class="tag tag-amber">SQLite</span>
+        <span class="tag tag-amber">FastAPI</span>
+        <span class="tag tag-amber">Session login</span>
+      </div>
+    </div>
+    <div class="card card-accent-teal">
+      <div class="card-sub">Follow Up</div>
+      <div class="card-title">Automated Follow-Ups</div>
+      <p>n8n workflows fire follow-up emails at Day 21 and Day 30, detect replies in Gmail, and mark applications ghosted at Day 45 with no response.</p>
+      <div class="tags">
+        <span class="tag tag-teal">n8n</span>
+        <span class="tag tag-teal">Gmail API</span>
+      </div>
+    </div>
+    <div class="card card-accent-red">
+      <div class="card-sub">Evolve</div>
+      <div class="card-title">Living CV Engine</div>
+      <p>Submit a new project via the dashboard's Project Log form → FastAPI triggers a CV rebuild. AI updates your master CV and regenerates all role templates automatically.</p>
+      <div class="tags">
+        <span class="tag">Gemini</span>
+        <span class="tag">FastAPI webhook</span>
+      </div>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- ═══ SECTION 2: ARCHITECTURE FLOW ═══ -->
+<section class="section" id="flow">
+<div class="container">
+  <div class="sec-label">02 &mdash; Full Architecture</div>
+  <h2 class="sec-title">End-to-end pipeline flow</h2>
+  <p class="sec-desc">From raw job board scrape to tracked outcome. One trigger, seven layers, no human in the loop.</p>
+
+  <div class="pflow">
+    <!-- TRIGGER -->
+    <div class="pflow-center">
+      <div class="pflow-trigger">
+        <span class="pft-icon">&#x23F0;</span>
+        <div>
+          <div class="pft-main">APScheduler</div>
+          <div class="pft-sub">Fires at 7:00 AM EAT &mdash; daily</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="pflow-conn"></div>
+
+    <!-- COLLECTION -->
+    <div class="pflow-layer">
+      <div class="pfl-head">
+        <div class="pfl-dot" style="background:var(--blue)"></div>
+        <div class="pfl-title">Collection Layer</div>
+        <div class="pfl-tech">Python + Playwright</div>
+      </div>
+      <div class="pfl-body">
+        <div class="pfl-chips">
+          <span class="pfl-chip">MyJobKenya</span>
+          <span class="pfl-chip">BrighterMonday KE</span>
+          <span class="pfl-chip">Fuzu</span>
+          <span class="pfl-chip">Indeed Kenya</span>
+          <span class="pfl-chip">LinkedIn &mdash; non-Easy-Apply only</span>
+          <span class="pfl-chip">Remotive RSS</span>
+          <span class="pfl-chip">We Work Remotely RSS</span>
+          <span class="pfl-chip">Google Jobs (SerpAPI)</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="pflow-conn"></div>
+
+    <!-- SCORING -->
+    <div class="pflow-layer">
+      <div class="pfl-head">
+        <div class="pfl-dot" style="background:var(--purple)"></div>
+        <div class="pfl-title">Scoring Layer</div>
+        <div class="pfl-tech">Python + Gemini / Groq</div>
+      </div>
+      <div class="pfl-body">
+        <div class="pfl-flow-row">
+          <span class="pfl-chip">Deduplication</span>
+          <span class="chain-arr">&rarr;</span>
+          <span class="pfl-chip">Skill Match (0&ndash;100)</span>
+          <span class="chain-arr">&rarr;</span>
+          <span class="pfl-chip">Hire Probability (0&ndash;100)</span>
+          <span class="chain-arr">&rarr;</span>
+          <div class="gate-wrap">
+            <div class="gate-diamond">
+              <div class="gate-text">Score<br>&ge; 65?</div>
+            </div>
+          </div>
+        </div>
+        <div class="gate-outcomes">
+          <div class="gate-yes">&#10003; Yes &mdash; proceed to CV Engine</div>
+          <div class="gate-no">&#10007; No &mdash; discard silently</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="pflow-conn"></div>
+
+    <!-- CV ENGINE -->
+    <div class="pflow-layer">
+      <div class="pfl-head">
+        <div class="pfl-dot" style="background:var(--teal)"></div>
+        <div class="pfl-title">CV Engine</div>
+        <div class="pfl-tech">Python + Gemini / Groq + ReportLab</div>
+      </div>
+      <div class="pfl-body">
+        <div class="pfl-flow-row">
+          <span class="pfl-chip">Keyword extraction</span>
+          <span class="chain-arr">&rarr;</span>
+          <span class="pfl-chip">Gap analysis</span>
+          <span class="chain-arr">&rarr;</span>
+          <span class="pfl-chip">AI drafts CV</span>
+          <span class="chain-arr">&rarr;</span>
+          <span class="pfl-chip">ATS self-score</span>
+          <span class="chain-arr">&rarr;</span>
+          <span class="pfl-chip">&ge;85% &rarr; PDF + .docx</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="pflow-conn"></div>
+
+    <!-- SUBMISSION SPLIT -->
+    <div class="pflow-split">
+      <div class="pflow-layer">
+        <div class="pfl-head">
+          <div class="pfl-dot" style="background:var(--amber)"></div>
+          <div class="pfl-title">Email Application</div>
+          <div class="pfl-tech">Gmail API &middot; OAuth2</div>
+        </div>
+        <div class="pfl-body">
+          <p>Hiring email extracted from job posting. CV PDF + cover letter sent directly. No password stored &mdash; OAuth2 only.</p>
+        </div>
+      </div>
+      <div class="split-or">OR</div>
+      <div class="pflow-layer">
+        <div class="pfl-head">
+          <div class="pfl-dot" style="background:var(--amber)"></div>
+          <div class="pfl-title">Form Fill</div>
+          <div class="pfl-tech">Playwright &middot; Headless Chromium</div>
+        </div>
+        <div class="pfl-body">
+          <p>Playwright opens company careers URL, AI maps form fields, uploads CV, submits. Screenshot saved as proof.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="pflow-conn"></div>
+
+    <!-- TRACKING -->
+    <div class="pflow-layer">
+      <div class="pfl-head">
+        <div class="pfl-dot" style="background:var(--slate)"></div>
+        <div class="pfl-title">Tracking Layer</div>
+        <div class="pfl-tech">SQLite + FastAPI (real-time reads)</div>
+      </div>
+      <div class="pfl-body">
+        <div class="pfl-flow-row">
+          <span class="pfl-chip">SQLite &mdash; source of truth</span>
+          <span class="chain-arr">&rarr; read directly &rarr;</span>
+          <span class="pfl-chip">FastAPI Dashboard &mdash; your browser</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="pflow-conn"></div>
+
+    <!-- n8n -->
+    <div class="pflow-layer">
+      <div class="pfl-head">
+        <div class="pfl-dot" style="background:var(--amber)"></div>
+        <div class="pfl-title">n8n Workflows</div>
+        <div class="pfl-tech">Self-hosted &middot; Docker &middot; Receives webhooks from Python</div>
+      </div>
+      <div class="pfl-body">
+        <div class="pfl-chips">
+          <span class="pfl-chip">Day 21: Follow-up email</span>
+          <span class="pfl-chip">Day 30: 2nd follow-up</span>
+          <span class="pfl-chip">Day 45: Mark ghosted</span>
+          <span class="pfl-chip">Reply detected &rarr; notify you</span>
+          <span class="pfl-chip">Project logged &rarr; rebuild CV</span>
+        </div>
+      </div>
+    </div>
+  </div><!-- /pflow -->
+</div>
+</section>
+
+<!-- ═══ SECTION 3: JOB SOURCES ═══ -->
+<section class="section" id="sources">
+<div class="container">
+  <div class="sec-label">03 &mdash; Job Sources</div>
+  <h2 class="sec-title">Eight boards, three market tiers</h2>
+  <p class="sec-desc">Local Nairobi boards run first. Remote boards filtered to Africa/global-friendly companies only. LinkedIn strictly non-Easy-Apply.</p>
+
+  <div class="board-grid">
+    <div class="board-card" style="border-top:3px solid var(--teal)">
+      <div class="board-name">MyJobKenya</div>
+      <div class="board-region">&#127472;&#127466; Nairobi &middot; Kenya</div>
+      <div class="tags" style="margin-bottom:10px"><span class="tag tag-teal">Priority 1</span><span class="tag">Local</span></div>
+      <div class="board-method">HTML scraper &middot; daily</div>
+    </div>
+    <div class="board-card" style="border-top:3px solid var(--teal)">
+      <div class="board-name">BrighterMonday Kenya</div>
+      <div class="board-region">&#127472;&#127466; East Africa</div>
+      <div class="tags" style="margin-bottom:10px"><span class="tag tag-teal">Priority 1</span><span class="tag">Local</span></div>
+      <div class="board-method">HTML scraper &middot; daily</div>
+    </div>
+    <div class="board-card" style="border-top:3px solid var(--teal)">
+      <div class="board-name">Fuzu</div>
+      <div class="board-region">&#127774; East Africa</div>
+      <div class="tags" style="margin-bottom:10px"><span class="tag tag-teal">Priority 1</span><span class="tag">Local</span></div>
+      <div class="board-method">HTML scraper &middot; daily</div>
+    </div>
+    <div class="board-card" style="border-top:3px solid var(--blue)">
+      <div class="board-name">Indeed Kenya</div>
+      <div class="board-region">&#127472;&#127466; Kenya &middot; Remote</div>
+      <div class="tags" style="margin-bottom:10px"><span class="tag tag-blue">Priority 2</span><span class="tag">Local+Remote</span></div>
+      <div class="board-method">HTML scraper &middot; daily</div>
+    </div>
+    <div class="board-card" style="border-top:3px solid var(--blue)">
+      <div class="board-name">LinkedIn</div>
+      <div class="board-region">&#127774; Nairobi &middot; Remote</div>
+      <div class="tags" style="margin-bottom:10px"><span class="tag tag-blue">Priority 2</span><span class="tag tag-red">No Easy Apply</span></div>
+      <div class="board-method">Playwright &middot; session-based</div>
+    </div>
+    <div class="board-card" style="border-top:3px solid var(--purple)">
+      <div class="board-name">Remotive</div>
+      <div class="board-region">&#127760; Global Remote</div>
+      <div class="tags" style="margin-bottom:10px"><span class="tag tag-purple">Priority 3</span><span class="tag">Remote</span></div>
+      <div class="board-method">RSS feed &middot; daily</div>
+    </div>
+    <div class="board-card" style="border-top:3px solid var(--purple)">
+      <div class="board-name">We Work Remotely</div>
+      <div class="board-region">&#127760; Global Remote</div>
+      <div class="tags" style="margin-bottom:10px"><span class="tag tag-purple">Priority 3</span><span class="tag">Remote</span></div>
+      <div class="board-method">RSS feed &middot; daily</div>
+    </div>
+    <div class="board-card" style="border-top:3px solid var(--muted)">
+      <div class="board-name">Google Jobs</div>
+      <div class="board-region">&#127760; Global Aggregator</div>
+      <div class="tags" style="margin-bottom:10px"><span class="tag">Priority 4</span></div>
+      <div class="board-method">SerpAPI free tier &middot; 100/mo</div>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- ═══ SECTION 4: SCORING ═══ -->
+<section class="section" id="scoring">
+<div class="container">
+  <div class="sec-label">04 &mdash; Scoring Engine</div>
+  <h2 class="sec-title">Two scores, both must pass</h2>
+  <p class="sec-desc">Every job receives two independent AI scores before the system spends any effort on it. Both must hit 65+ or the job is discarded.</p>
+
+  <div class="grid g2">
+    <div class="card card-accent-purple">
+      <div class="card-sub">Score A &mdash; Skill Match</div>
+      <div class="card-title">Does this job match your profile?</div>
+      <p style="margin-bottom:16px">AI reads the full JD and scores 0&ndash;100 against your target roles: data analysis, software engineering, AI, automation.</p>
+      <div class="table-wrap">
+        <table>
+          <tr><th>Signal</th><th style="text-align:right">Points</th></tr>
+          <tr><td>Core role match (data / software / AI)</td><td style="color:var(--green);font-weight:700;text-align:right">+40</td></tr>
+          <tr><td>Automation / Python / SQL keywords</td><td style="color:var(--green);font-weight:700;text-align:right">+20</td></tr>
+          <tr><td>Seniority appropriate (junior&ndash;mid)</td><td style="color:var(--green);font-weight:700;text-align:right">+20</td></tr>
+          <tr><td>Technologies in your stack</td><td style="color:var(--green);font-weight:700;text-align:right">+20</td></tr>
+          <tr><td>Hard degree requirement not met</td><td style="color:var(--red);font-weight:700;text-align:right">-20</td></tr>
+        </table>
+      </div>
+      <p style="margin-top:14px;font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;font-weight:700;color:var(--purple)">Threshold: &ge; 65 to proceed</p>
+    </div>
+
+    <div class="card card-accent-amber">
+      <div class="card-sub">Score B &mdash; Hire Probability</div>
+      <div class="card-title">Will they hire a Kenyan?</div>
+      <p style="margin-bottom:16px">AI scans for signals that indicate openness to African/Kenyan candidates, or hard blockers that would guarantee rejection.</p>
+      <div class="table-wrap">
+        <table>
+          <tr><th>Signal</th><th style="text-align:right">Points</th></tr>
+          <tr><td>Mentions Kenya / Africa / Nairobi</td><td style="color:var(--green);font-weight:700;text-align:right">+30</td></tr>
+          <tr><td>Remote-first / distributed team</td><td style="color:var(--green);font-weight:700;text-align:right">+25</td></tr>
+          <tr><td>No visa/work-auth requirement</td><td style="color:var(--green);font-weight:700;text-align:right">+25</td></tr>
+          <tr><td>Salary listed (transparency signal)</td><td style="color:var(--green);font-weight:700;text-align:right">+10</td></tr>
+          <tr><td>&ldquo;Must be authorized to work in US/UK/EU&rdquo;</td><td style="color:var(--red);font-weight:700;text-align:right">-60</td></tr>
+          <tr><td>&ldquo;Local candidates only&rdquo;</td><td style="color:var(--red);font-weight:700;text-align:right">-50</td></tr>
+          <tr><td>On-site in non-African city, no remote option</td><td style="color:var(--red);font-weight:700;text-align:right">-40</td></tr>
+        </table>
+      </div>
+      <p style="margin-top:14px;font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;font-weight:700;color:var(--amber)">Threshold: &ge; 65 to proceed</p>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- ═══ SECTION 5: CV ENGINE ═══ -->
+<section class="section" id="cv">
+<div class="container">
+  <div class="sec-label">05 &mdash; CV Engine</div>
+  <h2 class="sec-title">ATS-first. Role-specific. Self-verifying.</h2>
+  <p class="sec-desc">Every CV generated must pass an ATS simulation before it is ever submitted. Keyword engineering is treated as a hard requirement, not a nice-to-have. The system regenerates until it passes.</p>
+
+  <!-- ATS Rules -->
+  <div class="card" style="border:2px solid var(--teal);margin-bottom:24px">
+    <div class="card-sub" style="color:var(--teal)">ATS Compliance Rules — Non-Negotiable</div>
+    <div class="card-title" style="margin-bottom:20px">Every generated CV must satisfy all of these before submission</div>
+    <div class="grid g2" style="gap:16px">
+      <div>
+        <div style="font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;font-weight:700;font-size:0.85rem;color:var(--navy);margin-bottom:10px">Format Rules (Parser Safety)</div>
+        <ul style="color:var(--muted);font-size:0.86rem;padding-left:16px;line-height:2.1">
+          <li>Single column layout only &mdash; no tables used for structure</li>
+          <li>No text boxes, headers/footers, images, graphics, or skill bars</li>
+          <li>Standard section names: <code>EXPERIENCE</code>, <code>SKILLS</code>, <code>EDUCATION</code>, <code>PROJECTS</code></li>
+          <li>Fonts: Arial or Calibri only &mdash; fully embedded, selectable text</li>
+          <li>Output in both <strong>PDF</strong> and <strong>.docx</strong> &mdash; system picks format per ATS type</li>
+          <li>No special characters that break ATS parsers (&amp;, ★, ●, etc.)</li>
+          <li>Contact info in plain text at the very top &mdash; not in a header element</li>
+          <li>Consistent date format throughout: <code>Jan 2024 – Mar 2025</code></li>
+        </ul>
+      </div>
+      <div>
+        <div style="font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;font-weight:700;font-size:0.85rem;color:var(--navy);margin-bottom:10px">Keyword Rules (Score Maximisation)</div>
+        <ul style="color:var(--muted);font-size:0.86rem;padding-left:16px;line-height:2.1">
+          <li>Every required skill from the JD must appear <strong>verbatim</strong> at least once</li>
+          <li>Use exact JD phrasing &mdash; if JD says &ldquo;ML&rdquo; the CV says &ldquo;ML&rdquo;, not &ldquo;machine learning&rdquo;</li>
+          <li>Include both acronym AND full form where JD uses both</li>
+          <li>Job title in CV summary must mirror or closely echo the target role title</li>
+          <li>Skills section lists JD-matching skills first, ranked by JD prominence</li>
+          <li>Preferred/nice-to-have skills included if present in master CV</li>
+          <li>Soft skills mentioned in JD woven into experience bullets naturally</li>
+          <li>Every experience bullet quantified: numbers, percentages, or outcomes</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Generation Pipeline -->
+  <div class="grid g2" style="margin-bottom:24px">
+    <div class="card card-accent-teal">
+      <div class="card-sub">ATS Generation Pipeline</div>
+      <div class="card-title">What happens for every qualifying job</div>
+      <div class="steps" style="margin-top:16px">
+        <div class="step">
+          <div class="step-line"></div>
+          <div class="step-num" style="background:var(--teal-light);color:var(--teal);border:1px solid #7EC9B4">1</div>
+          <div class="step-body"><h3>AI extracts keyword map from JD</h3><p>Required skills, preferred skills, technologies, methodologies, soft skills, role title keywords &mdash; all extracted as a structured list</p></div>
+        </div>
+        <div class="step">
+          <div class="step-line"></div>
+          <div class="step-num" style="background:var(--teal-light);color:var(--teal);border:1px solid #7EC9B4">2</div>
+          <div class="step-body"><h3>Keyword gap analysis against master CV</h3><p>Each required keyword checked: present in master CV? Can it be truthfully added from experience? Gap keywords flagged.</p></div>
+        </div>
+        <div class="step">
+          <div class="step-line"></div>
+          <div class="step-num" style="background:var(--teal-light);color:var(--teal);border:1px solid #7EC9B4">3</div>
+          <div class="step-body"><h3>AI writes role-specific CV draft</h3><p>Summary rewritten for this exact role. Skills reordered. Relevant projects promoted. JD keywords woven into every bullet.</p></div>
+        </div>
+        <div class="step">
+          <div class="step-line"></div>
+          <div class="step-num" style="background:var(--teal-light);color:var(--teal);border:1px solid #7EC9B4">4</div>
+          <div class="step-body"><h3>ATS self-score simulation</h3><p>Python counts exact keyword matches between the generated CV text and the JD keyword map. Calculates coverage score (0&ndash;100).</p></div>
+        </div>
+        <div class="step">
+          <div class="step-line"></div>
+          <div class="step-num" style="background:var(--teal-light);color:var(--teal);border:1px solid #7EC9B4">5</div>
+          <div class="step-body"><h3>Score &ge; 85%? Pass &rarr; generate files</h3><p>Outputs ATS-safe PDF (ReportLab) + .docx (python-docx). Both filed to <code>/storage/applications/{job_id}/</code></p></div>
+        </div>
+        <div class="step">
+          <div class="step-num" style="background:var(--red-light);color:var(--red);border:1px solid #FECACA">6</div>
+          <div class="step-body"><h3>Score &lt; 85%? Regenerate with feedback</h3><p>Missing keywords fed back into the prompt. AI rewrites with explicit instruction to include each missing term. Max 3 attempts &mdash; if still failing, flagged in dashboard for manual review.</p></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card card-accent-red">
+      <div class="card-sub">Living CV &mdash; Project Log Trigger</div>
+      <div class="card-title">Submit a project, CV auto-rebuilds</div>
+      <div class="steps" style="margin-top:16px">
+        <div class="step">
+          <div class="step-line"></div>
+          <div class="step-num" style="background:var(--red-light);color:var(--red);border:1px solid #FECACA">1</div>
+          <div class="step-body"><h3>You fill Project Log form in the dashboard</h3><p>Title, tech stack used, what you built, outcome/impact, dates</p></div>
+        </div>
+        <div class="step">
+          <div class="step-line"></div>
+          <div class="step-num" style="background:var(--red-light);color:var(--red);border:1px solid #FECACA">2</div>
+          <div class="step-body"><h3>FastAPI triggers CV rebuild script</h3><p>Python merges new project into master CV JSON immediately</p></div>
+        </div>
+        <div class="step">
+          <div class="step-line"></div>
+          <div class="step-num" style="background:var(--red-light);color:var(--red);border:1px solid #FECACA">3</div>
+          <div class="step-body"><h3>AI re-ranks your skills + rewrites summary</h3><p>New project&rsquo;s technologies added to skills list. Summary updated to reflect latest experience level.</p></div>
+        </div>
+        <div class="step">
+          <div class="step-num" style="background:var(--red-light);color:var(--red);border:1px solid #FECACA">4</div>
+          <div class="step-body"><h3>All role base-templates regenerated</h3><p>Data analyst, software engineer, and AI/automation variants all rebuilt from the updated master CV</p></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ATS format reference -->
+  <div class="card card-accent-blue">
+    <div class="card-sub">CV Structure &mdash; ATS-Safe Section Order</div>
+    <div class="card-title" style="margin-bottom:16px">Fixed layout used for every generated CV</div>
+    <div class="table-wrap">
+      <table>
+        <tr><th>Section</th><th>ATS Header Name</th><th>Content Rules</th></tr>
+        <tr><td>Contact</td><td><code>plain text, top of page</code></td><td>Name, email, phone, LinkedIn URL, location &mdash; no styling</td></tr>
+        <tr><td>Summary</td><td><code>PROFESSIONAL SUMMARY</code></td><td>3&ndash;4 lines. Job title echoed from JD. 3+ required keywords embedded naturally.</td></tr>
+        <tr><td>Skills</td><td><code>TECHNICAL SKILLS</code></td><td>JD-required skills listed first. Exact keyword spelling. Comma-separated or simple bullet list.</td></tr>
+        <tr><td>Experience</td><td><code>WORK EXPERIENCE</code></td><td>Reverse chronological. Each bullet: action verb + task + quantified result. JD keywords woven in.</td></tr>
+        <tr><td>Projects</td><td><code>PROJECTS</code></td><td>Reordered by relevance to role. Tech stack listed explicitly. Outcome quantified.</td></tr>
+        <tr><td>Education</td><td><code>EDUCATION</code></td><td>Degree, institution, year. No GPA unless outstanding.</td></tr>
+        <tr><td>Certifications</td><td><code>CERTIFICATIONS</code></td><td>Only included if relevant to the role. Exact cert name + issuer + year.</td></tr>
+      </table>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- ═══ SECTION 6: SUBMISSION ═══ -->
+<section class="section" id="submit">
+<div class="container">
+  <div class="sec-label">06 &mdash; Application Submission</div>
+  <h2 class="sec-title">Two paths, both fully automated</h2>
+  <p class="sec-desc">System picks the path automatically from what the job posting requires. Max 15 applications per day — quality, not volume.</p>
+
+  <div class="grid g2" style="margin-bottom:20px">
+    <div class="card card-accent-amber">
+      <div class="card-sub">Path A &mdash; Email Application</div>
+      <div class="card-title">Gmail API Direct Send</div>
+      <p style="margin-bottom:14px">When the job posting includes an email address, system sends a professional email with the tailored CV PDF and cover letter attached.</p>
+      <div class="table-wrap">
+        <table>
+          <tr><th>Step</th><th>Detail</th></tr>
+          <tr><td>1. Extract hiring email</td><td>Regex + AI extraction from job text</td></tr>
+          <tr><td>2. Compose email</td><td>Subject line + body from Jinja2 template</td></tr>
+          <tr><td>3. Attach PDF + cover letter</td><td>Base64 MIME encoding</td></tr>
+          <tr><td>4. Send via Gmail API</td><td>OAuth2 &mdash; no password stored anywhere</td></tr>
+          <tr><td>5. Log to SQLite + Sheets</td><td>Immediate status update</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="card card-accent-blue">
+      <div class="card-sub">Path B &mdash; Web Form Application</div>
+      <div class="card-title">Playwright Browser Automation</div>
+      <p style="margin-bottom:14px">When the job links to a company careers form, Playwright fills every field, uploads the PDF, and submits.</p>
+      <div class="table-wrap">
+        <table>
+          <tr><th>Step</th><th>Detail</th></tr>
+          <tr><td>1. Open company careers URL</td><td>Human-like delays, realistic 1920&times;1080 viewport</td></tr>
+          <tr><td>2. AI maps form fields</td><td>Name, email, LinkedIn, experience fields</td></tr>
+          <tr><td>3. Fill all fields</td><td>Typed character by character (not bulk paste)</td></tr>
+          <tr><td>4. Upload CV PDF</td><td>File upload interaction via Playwright</td></tr>
+          <tr><td>5. Submit + screenshot</td><td>Proof of submission saved locally</td></tr>
+          <tr><td>6. Error fallback</td><td>Captcha / broken form &rarr; Telegram alert to you</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="border:1px solid var(--border-strong)">
+    <div class="card-sub">Rate Limiting Policy &mdash; Anti-Ban Protection</div>
+    <div class="card-title" style="margin-bottom:20px">Throttle rules applied system-wide</div>
+    <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:24px">
+      <div><div style="font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;font-weight:700;color:var(--amber);margin-bottom:4px;font-size:0.8rem">Max Applications / Day</div><div style="font-size:2.2rem;font-weight:800;font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;color:var(--navy)">15</div><div style="font-size:0.78rem;color:var(--muted);font-style:italic">Configurable in .env</div></div>
+      <div><div style="font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;font-weight:700;color:var(--amber);margin-bottom:4px;font-size:0.8rem">Scrape Request Delay</div><div style="font-size:2.2rem;font-weight:800;font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;color:var(--navy)">3&ndash;9s</div><div style="font-size:0.78rem;color:var(--muted);font-style:italic">Randomised per request</div></div>
+      <div><div style="font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;font-weight:700;color:var(--amber);margin-bottom:4px;font-size:0.8rem">Per-Board Daily Cap</div><div style="font-size:2.2rem;font-weight:800;font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;color:var(--navy)">50</div><div style="font-size:0.78rem;color:var(--muted);font-style:italic">Requests per board</div></div>
+      <div><div style="font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;font-weight:700;color:var(--amber);margin-bottom:4px;font-size:0.8rem">User-Agent Rotation</div><div style="font-size:2.2rem;font-weight:800;font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;color:var(--navy)">&#10003;</div><div style="font-size:0.78rem;color:var(--muted);font-style:italic">Rotated per session</div></div>
+      <div><div style="font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;font-weight:700;color:var(--amber);margin-bottom:4px;font-size:0.8rem">robots.txt Respected</div><div style="font-size:2.2rem;font-weight:800;font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;color:var(--navy)">&#10003;</div><div style="font-size:0.78rem;color:var(--muted);font-style:italic">Disallowed paths skipped</div></div>
+      <div><div style="font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;font-weight:700;color:var(--amber);margin-bottom:4px;font-size:0.8rem">429 Backoff</div><div style="font-size:2.2rem;font-weight:800;font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;color:var(--navy)">&#10003;</div><div style="font-size:0.78rem;color:var(--muted);font-style:italic">Exponential retry</div></div>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- ═══ SECTION 7: TRACKING ═══ -->
+<section class="section" id="tracking">
+<div class="container">
+  <div class="sec-label">07 &mdash; Tracking, Dashboard &amp; Follow-Up</div>
+  <h2 class="sec-title">Your own dashboard, real-time, no Sheets</h2>
+  <p class="sec-desc">FastAPI serves a password-protected web UI directly from your VPS. SQLite is read live — no sync delay, no third-party dependency. n8n receives webhooks from Python to fire follow-up emails.</p>
+
+  <!-- State Flow -->
+  <div class="state-flow" style="margin-bottom:28px">
+    <div class="sf-main">
+      <div class="sf-state">
+        <div class="sf-dot" style="background:var(--muted)"></div>
+        <div class="sf-name">Discovered</div>
+        <div class="sf-day">scraped</div>
+      </div>
+      <div class="sf-arr">&rarr;</div>
+      <div class="sf-state">
+        <div class="sf-dot" style="background:var(--purple)"></div>
+        <div class="sf-name">Scored</div>
+        <div class="sf-day">AI evaluated</div>
+      </div>
+      <div class="sf-arr">&rarr;</div>
+      <div class="sf-state" style="border-color:var(--teal)">
+        <div class="sf-dot" style="background:var(--teal)"></div>
+        <div class="sf-name">Applied</div>
+        <div class="sf-day">submitted</div>
+      </div>
+      <div class="sf-arr">&rarr;</div>
+      <div class="sf-state">
+        <div class="sf-dot" style="background:var(--blue)"></div>
+        <div class="sf-name">Follow-up 1</div>
+        <div class="sf-day">Day 21</div>
+      </div>
+      <div class="sf-arr">&rarr;</div>
+      <div class="sf-state">
+        <div class="sf-dot" style="background:var(--blue)"></div>
+        <div class="sf-name">Follow-up 2</div>
+        <div class="sf-day">Day 30</div>
+      </div>
+      <div class="sf-arr">&rarr;</div>
+      <div class="sf-state" style="border-color:var(--border-strong)">
+        <div class="sf-dot" style="background:var(--muted)"></div>
+        <div class="sf-name">Ghosted</div>
+        <div class="sf-day">Day 45</div>
+      </div>
+    </div>
+    <div class="sf-end-wrap">
+      <div class="sf-end" style="background:var(--red-light);border-color:#FECACA;color:var(--red)">&#10007; Discarded &mdash; score below 65, never applied</div>
+      <div class="sf-end" style="background:var(--green-light);border-color:#86EFAC;color:var(--green)">&#10003; Interview Booked &mdash; Gmail reply detected at any stage</div>
+    </div>
+  </div>
+
+  <div class="grid g2" style="margin-bottom:20px">
+    <div class="card card-accent-teal">
+      <div class="card-sub">n8n Follow-Up Integration</div>
+      <div class="card-title">Webhook-driven, not polling</div>
+      <p style="margin-bottom:14px">APScheduler checks SQLite at set intervals. When an application needs action, Python calls an n8n webhook — n8n sends the email and updates the status back via the FastAPI API. No Sheets, no polling loop.</p>
+      <div class="table-wrap">
+        <table>
+          <tr><th>Day</th><th>Action</th></tr>
+          <tr><td><strong>0</strong></td><td>Submitted &rarr; Python calls n8n &ldquo;applied&rdquo; webhook</td></tr>
+          <tr><td><strong>21</strong></td><td>APScheduler fires &rarr; n8n sends follow-up #1 (3 weeks)</td></tr>
+          <tr><td><strong>30</strong></td><td>APScheduler fires &rarr; n8n sends follow-up #2 (1 month)</td></tr>
+          <tr><td><strong>45</strong></td><td>Status &rarr; Ghosted via FastAPI PATCH endpoint</td></tr>
+          <tr><td><strong>Any</strong></td><td>Gmail reply detected &rarr; n8n sends Telegram alert to you</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="card card-accent-blue">
+      <div class="card-sub">FastAPI Dashboard — Login &amp; Pages</div>
+      <div class="card-title">Your private web UI</div>
+      <p style="margin-bottom:14px">Served at <code>https://your-vps-domain/</code>. Protected by a session-based login page. Uses <code>itsdangerous</code> for signed session cookies — no database table needed for auth.</p>
+      <div class="table-wrap">
+        <table>
+          <tr><th>Page</th><th>Contents</th></tr>
+          <tr><td><code>/login</code></td><td>Login form &mdash; username + password from <code>.env</code></td></tr>
+          <tr><td><code>/pipeline</code></td><td>All applications, status badges, scores, dates, follow-up timeline</td></tr>
+          <tr><td><code>/feed</code></td><td>Jobs discovered today with skill + hire scores</td></tr>
+          <tr><td><code>/projects</code></td><td>Form to log a new project &rarr; triggers CV rebuild</td></tr>
+          <tr><td><code>/stats</code></td><td>Response rate, applications by board, ghosted vs interviews</td></tr>
+          <tr><td><code>/api/*</code></td><td>REST endpoints consumed by n8n and APScheduler</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="border-color:var(--border-strong)">
+    <div class="card-sub">Auth Flow</div>
+    <div class="card-title" style="margin-bottom:16px">How the login works</div>
+    <div class="steps">
+      <div class="step">
+        <div class="step-line"></div>
+        <div class="step-num" style="background:var(--blue-light);color:var(--blue);border:1px solid #93B4D8">1</div>
+        <div class="step-body"><h3>You visit <code>https://your-domain/</code></h3><p>FastAPI middleware checks for a valid signed session cookie. None found &rarr; redirect to <code>/login</code></p></div>
+      </div>
+      <div class="step">
+        <div class="step-line"></div>
+        <div class="step-num" style="background:var(--blue-light);color:var(--blue);border:1px solid #93B4D8">2</div>
+        <div class="step-body"><h3>You enter username + password</h3><p>Credentials checked against <code>DASHBOARD_USER</code> and <code>DASHBOARD_PASS</code> in <code>.env</code>. No database needed.</p></div>
+      </div>
+      <div class="step">
+        <div class="step-line"></div>
+        <div class="step-num" style="background:var(--blue-light);color:var(--blue);border:1px solid #93B4D8">3</div>
+        <div class="step-body"><h3>FastAPI sets a signed session cookie</h3><p>Signed with <code>SECRET_KEY</code> from <code>.env</code> using <code>itsdangerous</code>. Cookie expires after 24 hours.</p></div>
+      </div>
+      <div class="step">
+        <div class="step-num" style="background:var(--blue-light);color:var(--blue);border:1px solid #93B4D8">4</div>
+        <div class="step-body"><h3>All pages now accessible until logout or expiry</h3><p>Logout clears the cookie. Middleware rejects any request without a valid cookie.</p></div>
+      </div>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- ═══ SECTION 8: AI STRATEGY ═══ -->
+<section class="section" id="ai">
+<div class="container">
+  <div class="sec-label">08 &mdash; AI Strategy</div>
+  <h2 class="sec-title">Three models, one fallback chain</h2>
+  <p class="sec-desc">Best free option runs first. If rate-limited, the next one picks up. The system never stops and never pays for AI.</p>
+
+  <div class="chain-wrap" style="margin-bottom:28px">
+    <div class="ai-node ai-primary">
+      <div class="ai-badge" style="background:var(--blue-light);color:var(--blue)">Primary</div>
+      <div class="ai-name">Google Gemini</div>
+      <div class="ai-detail">Flash 2.0 free tier &middot; 1M tokens/day &middot; 15 RPM</div>
+      <div class="tags"><span class="tag tag-blue">CV tailoring</span><span class="tag tag-blue">Cover letters</span></div>
+    </div>
+    <div style="display:flex;align-items:center;padding:0 2px;flex-shrink:0">
+      <div style="height:1px;width:24px;background:repeating-linear-gradient(to right,var(--amber) 0,var(--amber) 4px,transparent 4px,transparent 8px)"></div>
+      <div style="font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;font-size:0.65rem;font-weight:700;color:var(--muted);padding:0 6px;white-space:nowrap">fallback if rate-limited</div>
+      <div style="height:1px;width:24px;background:repeating-linear-gradient(to right,var(--amber) 0,var(--amber) 4px,transparent 4px,transparent 8px)"></div>
+    </div>
+    <div class="ai-node ai-secondary">
+      <div class="ai-badge" style="background:var(--purple-light);color:var(--purple)">Secondary</div>
+      <div class="ai-name">Groq &mdash; Llama 3.3</div>
+      <div class="ai-detail">70B free tier &middot; 30 RPM &middot; very fast inference</div>
+      <div class="tags"><span class="tag tag-purple">Scoring</span><span class="tag tag-purple">Field mapping</span></div>
+    </div>
+    <div style="display:flex;align-items:center;padding:0 2px;flex-shrink:0">
+      <div style="height:1px;width:24px;background:repeating-linear-gradient(to right,var(--amber) 0,var(--amber) 4px,transparent 4px,transparent 8px)"></div>
+      <div style="font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;font-size:0.65rem;font-weight:700;color:var(--muted);padding:0 6px;white-space:nowrap">last resort</div>
+      <div style="height:1px;width:24px;background:repeating-linear-gradient(to right,var(--amber) 0,var(--amber) 4px,transparent 4px,transparent 8px)"></div>
+    </div>
+    <div class="ai-node ai-fallback">
+      <div class="ai-badge" style="background:var(--teal-light);color:var(--teal)">Fallback</div>
+      <div class="ai-name">Ollama &mdash; Mistral 7B</div>
+      <div class="ai-detail">Self-hosted on VPS &middot; unlimited &middot; fully private</div>
+      <div class="tags"><span class="tag tag-teal">Email extract</span><span class="tag tag-teal">Simple scoring</span></div>
+    </div>
+  </div>
+
+  <div class="grid g3">
+    <div class="card card-accent-blue">
+      <div class="card-sub">Token Efficiency</div>
+      <div class="card-title">Staying within free limits</div>
+      <ul style="color:var(--muted);font-size:0.86rem;padding-left:16px;line-height:2">
+        <li>JDs truncated to 2,000 characters</li>
+        <li>Scoring batched: 10 jobs per API call</li>
+        <li>CV template cached, not regenerated each run</li>
+        <li>Token usage logged daily with alerts at 80% limit</li>
+      </ul>
+    </div>
+    <div class="card card-accent-purple">
+      <div class="card-sub">Prompt Templates</div>
+      <div class="card-title">Structured Jinja2 templates</div>
+      <ul style="color:var(--muted);font-size:0.86rem;padding-left:16px;line-height:2">
+        <li><code>skill_score.j2</code> &mdash; skill match scoring</li>
+        <li><code>hire_score.j2</code> &mdash; hire probability</li>
+        <li><code>cv_tailor.j2</code> &mdash; CV tailoring</li>
+        <li><code>cover_letter.j2</code> &mdash; cover letter generation</li>
+      </ul>
+    </div>
+    <div class="card card-accent-teal">
+      <div class="card-sub">Task Assignment</div>
+      <div class="card-title">Which model runs what</div>
+      <div class="table-wrap">
+        <table>
+          <tr><th>Task</th><th>Model</th></tr>
+          <tr><td>CV tailoring</td><td style="color:var(--blue);font-weight:600">Gemini</td></tr>
+          <tr><td>Cover letter</td><td style="color:var(--blue);font-weight:600">Gemini</td></tr>
+          <tr><td>Skill scoring</td><td style="color:var(--purple);font-weight:600">Groq</td></tr>
+          <tr><td>Hire probability</td><td style="color:var(--purple);font-weight:600">Groq</td></tr>
+          <tr><td>Form field map</td><td style="color:var(--teal);font-weight:600">Ollama</td></tr>
+          <tr><td>Email extract</td><td style="color:var(--teal);font-weight:600">Ollama</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- ═══ SECTION 9: SECURITY ═══ -->
+<section class="section" id="security">
+<div class="container">
+  <div class="sec-label">09 &mdash; Security Architecture</div>
+  <h2 class="sec-title">Every layer has explicit mitigations</h2>
+  <p class="sec-desc">You're storing personal data, CV content, and credentials. Nothing is assumed safe by default.</p>
+
+  <div class="grid g2" style="margin-bottom:24px">
+    <div class="card card-accent-red">
+      <div class="card-sub">VPS Hardening</div>
+      <div class="card-title">Oracle Cloud VPS</div>
+      <ul style="color:var(--muted);font-size:0.86rem;padding-left:16px;line-height:2.1">
+        <li>SSH key-only auth &mdash; password disabled on day 1</li>
+        <li>UFW firewall: only ports 22, 80, 443, 5678 (n8n)</li>
+        <li>Fail2ban: auto-ban repeated SSH failures</li>
+        <li>Non-root user for all application processes</li>
+        <li>Unattended security upgrades enabled</li>
+        <li>n8n behind Nginx with Let&rsquo;s Encrypt HTTPS</li>
+      </ul>
+    </div>
+    <div class="card card-accent-amber">
+      <div class="card-sub">Credential Management</div>
+      <div class="card-title">Secrets &amp; API Keys</div>
+      <ul style="color:var(--muted);font-size:0.86rem;padding-left:16px;line-height:2.1">
+        <li><code>.env</code> file &mdash; never committed to git</li>
+        <li><code>.gitignore</code> blocks <code>.env</code>, <code>tokens/</code>, <code>storage/</code>, <code>data/</code></li>
+        <li>Gmail: OAuth2 refresh token only (no password stored)</li>
+        <li>AI API keys: read from env at runtime</li>
+        <li>Dashboard: <code>DASHBOARD_USER</code> + <code>DASHBOARD_PASS</code> + <code>SECRET_KEY</code> in <code>.env</code></li>
+        <li>n8n credentials: encrypted in its own SQLite DB</li>
+      </ul>
+    </div>
+    <div class="card card-accent-purple">
+      <div class="card-sub">Scraping Ethics</div>
+      <div class="card-title">Staying under the radar</div>
+      <ul style="color:var(--muted);font-size:0.86rem;padding-left:16px;line-height:2.1">
+        <li>Randomised delays: 3&ndash;9 seconds between requests</li>
+        <li>Rotating User-Agent strings per session</li>
+        <li>Realistic viewport: 1920&times;1080</li>
+        <li>LinkedIn: session cookies, max 50 req/day</li>
+        <li><code>robots.txt</code> respected &mdash; disallowed paths skipped</li>
+        <li>Exponential backoff on 429 responses</li>
+      </ul>
+    </div>
+    <div class="card card-accent-teal">
+      <div class="card-sub">Data Privacy</div>
+      <div class="card-title">Your personal data</div>
+      <ul style="color:var(--muted);font-size:0.86rem;padding-left:16px;line-height:2.1">
+        <li>CV data stays on your VPS &mdash; not sent to any SaaS</li>
+        <li>AI calls send only JD excerpts (not full CV) for scoring</li>
+        <li>Logs redact email addresses and phone numbers</li>
+        <li>Playwright screenshots stored locally only</li>
+        <li>SQLite on encrypted Oracle block volume</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-sub" style="color:var(--red)">Threat Model</div>
+    <div class="card-title" style="margin-bottom:20px">Known risks &amp; mitigations</div>
+    <div class="threat-row">
+      <div class="threat-name">LinkedIn account ban</div>
+      <div class="threat-risk">High risk if scraping aggressively</div>
+      <div class="threat-fix">Max 50 req/day, human delays, session cookies. Scrape search results only &mdash; not profiles.</div>
+    </div>
+    <div class="threat-row">
+      <div class="threat-name">Gemini/Groq rate limit</div>
+      <div class="threat-risk">Blocks applications mid-pipeline</div>
+      <div class="threat-fix">Fallback chain (Gemini &rarr; Groq &rarr; Ollama). Token usage tracked &mdash; pauses if limit near.</div>
+    </div>
+    <div class="threat-row">
+      <div class="threat-name">Playwright form errors</div>
+      <div class="threat-risk">Silent failed submission</div>
+      <div class="threat-fix">Screenshot every step. Exceptions caught, flagged in Sheets as &ldquo;Needs Manual&rdquo;, Telegram alert sent.</div>
+    </div>
+    <div class="threat-row">
+      <div class="threat-name">Gmail spam reputation</div>
+      <div class="threat-risk">Application emails land in spam</div>
+      <div class="threat-fix">Max 15/day, proper MIME formatting, professional templates, no bulk send headers.</div>
+    </div>
+    <div class="threat-row">
+      <div class="threat-name">VPS compromise</div>
+      <div class="threat-risk">API keys and CV exposed</div>
+      <div class="threat-fix">UFW firewall, SSH key only, Fail2ban, non-root user, automatic security patches.</div>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- ═══ SECTION 10: DATA SCHEMA ═══ -->
+<section class="section" id="schema">
+<div class="container">
+  <div class="sec-label">10 &mdash; Data Schema</div>
+  <h2 class="sec-title">SQLite internally, Sheets externally</h2>
+  <p class="sec-desc">SQLite is the source of truth. Google Sheets is a live read-only view for you. Both stay in sync after every event.</p>
+
+  <div class="schema">
+    <div class="schema-block">
+      <div class="schema-head">
+        <div class="schema-tname">jobs</div>
+        <div class="schema-tdesc">raw discovered listings, one row per unique job posting</div>
+      </div>
+      <div class="field-row"><span class="fname">id</span><span class="ftype">TEXT PK</span><span class="fdesc">SHA-256 hash of title+company+board (dedup key)</span></div>
+      <div class="field-row"><span class="fname">title</span><span class="ftype">TEXT</span><span class="fdesc">Job title as scraped</span></div>
+      <div class="field-row"><span class="fname">company</span><span class="ftype">TEXT</span><span class="fdesc">Company name</span></div>
+      <div class="field-row"><span class="fname">board</span><span class="ftype">TEXT</span><span class="fdesc">Source: myjobkenya | brightermonday | linkedin | ...</span></div>
+      <div class="field-row"><span class="fname">location</span><span class="ftype">TEXT</span><span class="fdesc">Location string from posting</span></div>
+      <div class="field-row"><span class="fname">work_type</span><span class="ftype">TEXT</span><span class="fdesc">remote | hybrid | onsite</span></div>
+      <div class="field-row"><span class="fname">apply_method</span><span class="ftype">TEXT</span><span class="fdesc">email | form | unknown</span></div>
+      <div class="field-row"><span class="fname">apply_url</span><span class="ftype">TEXT</span><span class="fdesc">Application URL or hiring email address</span></div>
+      <div class="field-row"><span class="fname">jd_text</span><span class="ftype">TEXT</span><span class="fdesc">Full job description (truncated to 10,000 chars)</span></div>
+      <div class="field-row"><span class="fname">skill_score</span><span class="ftype">INTEGER</span><span class="fdesc">0&ndash;100 AI skill match score</span></div>
+      <div class="field-row"><span class="fname">hire_score</span><span class="ftype">INTEGER</span><span class="fdesc">0&ndash;100 AI hire probability score</span></div>
+      <div class="field-row"><span class="fname">scraped_at</span><span class="ftype">DATETIME</span><span class="fdesc">UTC timestamp of discovery</span></div>
+      <div class="field-row"><span class="fname">status</span><span class="ftype">TEXT</span><span class="fdesc">discovered | scored | applied | discarded</span></div>
+    </div>
+
+    <div class="schema-block">
+      <div class="schema-head">
+        <div class="schema-tname">applications</div>
+        <div class="schema-tdesc">one row per submission — tracks entire lifecycle</div>
+      </div>
+      <div class="field-row"><span class="fname">id</span><span class="ftype">TEXT PK</span><span class="fdesc">UUID v4</span></div>
+      <div class="field-row"><span class="fname">job_id</span><span class="ftype">TEXT FK</span><span class="fdesc">References jobs.id</span></div>
+      <div class="field-row"><span class="fname">cv_pdf_path</span><span class="ftype">TEXT</span><span class="fdesc">Path to ATS-safe PDF on VPS</span></div>
+      <div class="field-row"><span class="fname">cv_docx_path</span><span class="ftype">TEXT</span><span class="fdesc">Path to .docx CV (for ATS systems preferring Word format)</span></div>
+      <div class="field-row"><span class="fname">ats_score</span><span class="ftype">INTEGER</span><span class="fdesc">ATS self-simulation keyword coverage % at time of submission</span></div>
+      <div class="field-row"><span class="fname">cover_letter_path</span><span class="ftype">TEXT</span><span class="fdesc">Path to cover letter text file</span></div>
+      <div class="field-row"><span class="fname">submit_method</span><span class="ftype">TEXT</span><span class="fdesc">email | playwright_form</span></div>
+      <div class="field-row"><span class="fname">submitted_at</span><span class="ftype">DATETIME</span><span class="fdesc">Submission timestamp (UTC)</span></div>
+      <div class="field-row"><span class="fname">status</span><span class="ftype">TEXT</span><span class="fdesc">applied | followup_1 | followup_2 | ghosted | interview</span></div>
+      <div class="field-row"><span class="fname">last_action_at</span><span class="ftype">DATETIME</span><span class="fdesc">Last follow-up or status change</span></div>
+      <div class="field-row"><span class="fname">reply_received</span><span class="ftype">BOOLEAN</span><span class="fdesc">Gmail reply detected</span></div>
+      <div class="field-row"><span class="fname">screenshot_path</span><span class="ftype">TEXT</span><span class="fdesc">Playwright submission proof (form path only)</span></div>
+      <div class="field-row"><span class="fname">error_msg</span><span class="ftype">TEXT</span><span class="fdesc">Error details if submission failed</span></div>
+    </div>
+
+    <div class="schema-block">
+      <div class="schema-head">
+        <div class="schema-tname">master_cv.json</div>
+        <div class="schema-tdesc">structured profile &mdash; the living CV source of truth</div>
+      </div>
+      <div class="field-row"><span class="fname">personal</span><span class="ftype">object</span><span class="fdesc">Name, email, phone, LinkedIn URL, location</span></div>
+      <div class="field-row"><span class="fname">summary</span><span class="ftype">string</span><span class="fdesc">Professional summary (AI-maintained, role-neutral)</span></div>
+      <div class="field-row"><span class="fname">skills</span><span class="ftype">array</span><span class="fdesc">Ranked skill list with proficiency levels</span></div>
+      <div class="field-row"><span class="fname">experience</span><span class="ftype">array</span><span class="fdesc">Work history with bullet points per role</span></div>
+      <div class="field-row"><span class="fname">projects</span><span class="ftype">array</span><span class="fdesc">Project log &mdash; grows as you submit entries via the dashboard Project Log form</span></div>
+      <div class="field-row"><span class="fname">education</span><span class="ftype">array</span><span class="fdesc">Degrees, certifications, online courses</span></div>
+      <div class="field-row"><span class="fname">role_variants</span><span class="ftype">object</span><span class="fdesc">Pre-tuned summaries per role: data_analyst, software_engineer, ai_automation</span></div>
+      <div class="field-row"><span class="fname">updated_at</span><span class="ftype">datetime</span><span class="fdesc">Last CV rebuild timestamp</span></div>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- ═══ SECTION 11: INFRASTRUCTURE ═══ -->
+<section class="section" id="infra">
+<div class="container">
+  <div class="sec-label">11 &mdash; Infrastructure</div>
+  <h2 class="sec-title">One VPS, one command to bring it up</h2>
+  <p class="sec-desc">Everything containerised with Docker Compose. Oracle ARM Ampere gives you more RAM than you need, completely free, forever.</p>
+
+  <div class="grid g2" style="margin-bottom:24px">
+    <div class="card card-accent-green">
+      <div class="card-sub">Oracle Cloud Always Free &mdash; ARM Ampere A1</div>
+      <div class="card-title">What you actually get, free forever</div>
+      <div class="table-wrap" style="margin-top:14px">
+        <table>
+          <tr><th>Resource</th><th>Free Allocation</th></tr>
+          <tr><td>vCPU</td><td style="color:var(--green);font-weight:700">4 cores (ARM)</td></tr>
+          <tr><td>RAM</td><td style="color:var(--green);font-weight:700">24 GB</td></tr>
+          <tr><td>Storage</td><td style="color:var(--green);font-weight:700">200 GB block volume</td></tr>
+          <tr><td>Outbound bandwidth</td><td style="color:var(--green);font-weight:700">10 TB / month</td></tr>
+          <tr><td>Duration</td><td style="color:var(--green);font-weight:700">Forever (Always Free tier)</td></tr>
+        </table>
+      </div>
+      <p style="margin-top:12px;font-size:0.82rem">Comfortably runs Python app + n8n + Nginx + Ollama 7B + Playwright headless in parallel.</p>
+    </div>
+    <div class="card card-accent-blue">
+      <div class="card-sub">Daily Schedule (EAT = UTC+3)</div>
+      <div class="card-title">APScheduler cron jobs</div>
+      <div class="table-wrap" style="margin-top:14px">
+        <table>
+          <tr><th>Time EAT</th><th>Job</th></tr>
+          <tr><td><code>07:00</code></td><td>Scrape all 8 job boards</td></tr>
+          <tr><td><code>08:00</code></td><td>AI scoring on new jobs</td></tr>
+          <tr><td><code>09:00</code></td><td>CV generation for qualifying jobs</td></tr>
+          <tr><td><code>09:30</code></td><td>Submit applications (max 15)</td></tr>
+          <tr><td><code>Every 6h</code></td><td>Check SQLite for applications needing follow-up &rarr; call n8n webhook</td></tr>
+          <tr><td><code>Every 6h</code></td><td>Check Gmail for replies &rarr; update SQLite status</td></tr>
+          <tr><td><code>00:00</code></td><td>Daily digest email to you</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="svc-grid">
+
+    <div class="svc-card svc-amber">
+      <div class="svc-num">01</div>
+      <div class="svc-name">job-engine</div>
+      <div class="svc-type">Custom build &middot; ./app &middot; Python 3.11</div>
+      <p class="svc-desc">The brain of the system. Runs all 8 scrapers, scores each job with AI, generates a tailored ATS-compliant CV and cover letter, submits applications via email or Playwright form automation, then fires follow-up webhooks to n8n on schedule. The only container you'll need to update as you develop.</p>
+      <div class="svc-pills">
+        <span class="svc-pill pill-green">restart: always</span>
+        <span class="svc-pill pill-gray">No public port &middot; internal only</span>
+      </div>
+      <div class="svc-vols">
+        <div class="svc-vol"><code>./data</code> SQLite database + master CV JSON</div>
+        <div class="svc-vol"><code>./storage</code> Generated PDFs and screenshots</div>
+        <div class="svc-vol"><code>./app/prompts</code> Jinja2 AI prompt templates</div>
+      </div>
+    </div>
+
+    <div class="svc-card svc-blue">
+      <div class="svc-num">02</div>
+      <div class="svc-name">dashboard</div>
+      <div class="svc-type">Custom build &middot; ./dashboard &middot; FastAPI</div>
+      <p class="svc-desc">Your control panel. A login-protected web UI where you track every application, browse today's scored job feed, log new portfolio projects to update your master CV, and view response-rate analytics. Reads SQLite in real-time &mdash; no sync or polling needed.</p>
+      <div class="svc-pills">
+        <span class="svc-pill pill-green">restart: always</span>
+        <span class="svc-pill pill-blue">Port 8000 &rarr; Nginx &rarr; HTTPS</span>
+      </div>
+      <div class="svc-vols">
+        <div class="svc-vol"><code>./data</code> Read-only SQLite access</div>
+        <div class="svc-vol"><code>./storage</code> Read-only CV and screenshot access</div>
+      </div>
+    </div>
+
+    <div class="svc-card svc-purple">
+      <div class="svc-num">03</div>
+      <div class="svc-name">n8n</div>
+      <div class="svc-type">n8nio/n8n:latest &middot; Self-hosted workflows</div>
+      <p class="svc-desc">Workflow automation engine. Sits and waits for webhooks from the Python engine &mdash; it never polls. Fires professional follow-up emails at Day&nbsp;21 and Day&nbsp;30, sends Telegram alerts when interview invites land, and can trigger a CV rebuild when you log new projects to the dashboard.</p>
+      <div class="svc-pills">
+        <span class="svc-pill pill-green">restart: always</span>
+        <span class="svc-pill pill-purple">Port 5678 &rarr; Nginx &rarr; HTTPS</span>
+      </div>
+      <div class="svc-vols">
+        <div class="svc-vol"><code>n8n_data</code> Workflow definitions + credentials (Docker volume)</div>
+      </div>
+    </div>
+
+    <div class="svc-card svc-teal">
+      <div class="svc-num">04</div>
+      <div class="svc-name">ollama</div>
+      <div class="svc-type">ollama/ollama:latest &middot; Self-hosted AI</div>
+      <p class="svc-desc">Your private local AI fallback. Runs a 7B parameter model (Mistral or similar) entirely in your own VPS RAM &mdash; 24&nbsp;GB is more than enough. Kicks in automatically when Gemini or Groq hit their rate limits. Zero API cost, no usage caps, and your CV data never leaves the server.</p>
+      <div class="svc-pills">
+        <span class="svc-pill pill-green">restart: always</span>
+        <span class="svc-pill pill-gray">Port 11434 &middot; internal only</span>
+      </div>
+      <div class="svc-vols">
+        <div class="svc-vol"><code>ollama_models</code> Model weights &mdash; ~4 GB (Docker volume)</div>
+      </div>
+    </div>
+
+    <div class="svc-card svc-navy">
+      <div class="svc-num">05</div>
+      <div class="svc-name">nginx</div>
+      <div class="svc-type">nginx:alpine &middot; Reverse proxy + HTTPS</div>
+      <p class="svc-desc">The only container exposed to the internet. Routes your-domain.com to the dashboard and your-domain.com/n8n to the workflow editor. Handles free HTTPS via Let's&nbsp;Encrypt certificates (auto-renewed). All other services stay on localhost behind it &mdash; nothing else is reachable from outside.</p>
+      <div class="svc-pills">
+        <span class="svc-pill pill-green">restart: always</span>
+        <span class="svc-pill pill-amber">Ports 80 + 443 &middot; public-facing</span>
+      </div>
+      <div class="svc-vols">
+        <div class="svc-vol"><code>./certs</code> Let's Encrypt free HTTPS certificates</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</section>
+
+<!-- ═══ SECTION 12: TOOL STACK ═══ -->
+<section class="section" id="stack">
+<div class="container">
+  <div class="sec-label">12 &mdash; Complete Tool Stack</div>
+  <h2 class="sec-title">Every tool, every limit, all $0</h2>
+  <p class="sec-desc">No trial periods. No credit cards. No time limits. All tools are either open-source self-hosted or genuinely free-forever API tiers.</p>
+
+  <div class="table-wrap">
+    <table>
+      <tr><th>Tool</th><th>Layer</th><th>Purpose</th><th>Free Tier Limit</th><th>Cost</th></tr>
+      <tr><td><strong>Oracle Cloud Always Free</strong></td><td>Infrastructure</td><td>VPS — runs everything</td><td>4 vCPU, 24GB RAM, forever</td><td style="color:var(--green);font-weight:700">$0 forever</td></tr>
+      <tr><td><strong>Docker Compose</strong></td><td>Infrastructure</td><td>Container orchestration</td><td>Unlimited</td><td style="color:var(--green);font-weight:700">$0</td></tr>
+      <tr><td><strong>Nginx + Let's Encrypt</strong></td><td>Infrastructure</td><td>Reverse proxy + free HTTPS</td><td>Unlimited</td><td style="color:var(--green);font-weight:700">$0</td></tr>
+      <tr><td><strong>Python 3.11+</strong></td><td>Core Engine</td><td>Scraping, scoring, CV gen, submission</td><td>Unlimited</td><td style="color:var(--green);font-weight:700">$0</td></tr>
+      <tr><td><strong>Playwright (Python)</strong></td><td>Submission</td><td>Browser automation for forms + scraping</td><td>Unlimited</td><td style="color:var(--green);font-weight:700">$0</td></tr>
+      <tr><td><strong>APScheduler</strong></td><td>Scheduling</td><td>Cron-style scheduling inside Python</td><td>Unlimited</td><td style="color:var(--green);font-weight:700">$0</td></tr>
+      <tr><td><strong>SQLite</strong></td><td>Storage</td><td>Internal job + application state</td><td>Unlimited</td><td style="color:var(--green);font-weight:700">$0</td></tr>
+      <tr><td><strong>ReportLab</strong></td><td>CV Generation</td><td>ATS-safe single-column PDF output</td><td>Unlimited</td><td style="color:var(--green);font-weight:700">$0</td></tr>
+      <tr><td><strong>python-docx</strong></td><td>CV Generation</td><td>.docx output for ATS systems that prefer Word format</td><td>Unlimited</td><td style="color:var(--green);font-weight:700">$0</td></tr>
+      <tr><td><strong>Google Gemini API</strong></td><td>AI — Primary</td><td>CV tailoring + cover letters</td><td>1M tokens/day · 15 RPM</td><td style="color:var(--green);font-weight:700">$0 free tier</td></tr>
+      <tr><td><strong>Groq API</strong></td><td>AI — Secondary</td><td>Scoring + field mapping (fast)</td><td>30 RPM · 14,400 req/day</td><td style="color:var(--green);font-weight:700">$0 free tier</td></tr>
+      <tr><td><strong>Ollama (self-hosted)</strong></td><td>AI — Fallback</td><td>Local AI when APIs rate-limited</td><td>Unlimited (your VPS)</td><td style="color:var(--green);font-weight:700">$0</td></tr>
+      <tr><td><strong>n8n (self-hosted)</strong></td><td>Workflows</td><td>Follow-ups, notifications, CV rebuild trigger</td><td>Unlimited (self-hosted)</td><td style="color:var(--green);font-weight:700">$0</td></tr>
+      <tr><td><strong>Gmail API</strong></td><td>Email</td><td>Send applications + detect replies</td><td>1B quota units/day</td><td style="color:var(--green);font-weight:700">$0</td></tr>
+      <tr><td><strong>FastAPI</strong></td><td>Dashboard</td><td>Web UI server + REST API for n8n</td><td>Unlimited (self-hosted)</td><td style="color:var(--green);font-weight:700">$0</td></tr>
+      <tr><td><strong>Jinja2</strong></td><td>Dashboard</td><td>HTML templating for dashboard pages</td><td>Unlimited</td><td style="color:var(--green);font-weight:700">$0</td></tr>
+      <tr><td><strong>itsdangerous</strong></td><td>Dashboard Auth</td><td>Signed session cookies for login</td><td>Unlimited</td><td style="color:var(--green);font-weight:700">$0</td></tr>
+      <tr><td><strong>Telegram Bot API</strong></td><td>Notifications</td><td>Alert you on interview invites, errors</td><td>Unlimited</td><td style="color:var(--green);font-weight:700">$0</td></tr>
+      <tr><td><strong>SerpAPI</strong></td><td>Job Source</td><td>Google Jobs search results</td><td>100 searches/month</td><td style="color:var(--green);font-weight:700">$0 free tier</td></tr>
+      <tr><td><strong>Remotive RSS</strong></td><td>Job Source</td><td>Remote tech jobs feed</td><td>Unlimited</td><td style="color:var(--green);font-weight:700">$0</td></tr>
+      <tr><td><strong>We Work Remotely RSS</strong></td><td>Job Source</td><td>Remote jobs feed</td><td>Unlimited</td><td style="color:var(--green);font-weight:700">$0</td></tr>
+    </table>
+  </div>
+</div>
+</section>
+
+<!-- ═══ SECTION 13: FILE STRUCTURE ═══ -->
+<section class="section" id="files">
+<div class="container">
+  <div class="sec-label">13 &mdash; Project File Structure</div>
+  <h2 class="sec-title">One module per responsibility</h2>
+  <p class="sec-desc">Clean boundaries. Each file owns one thing. Easy to debug, easy to extend.</p>
+
+  <div class="ftree">
+
+    <!-- Root -->
+    <div class="ft-root-row">
+      &#128193; job-automation/
+      <span class="ft-root-label">Oracle Cloud VPS &middot; project root</span>
+    </div>
+
+    <!-- app/scrapers/ -->
+    <div class="ft-module">
+      <div class="ft-mhead ftm-amber">
+        <span class="ft-mname">&#128193; app/scrapers/</span>
+        <span class="ft-mlabel">8 job board scrapers &mdash; runs daily at 07:00 EAT</span>
+      </div>
+      <div class="ft-mfiles">
+        <div class="ft-row"><span class="ft-fn">myjobkenya.py</span><span class="ft-fd">HTML scraper &mdash; primary Nairobi source</span></div>
+        <div class="ft-row"><span class="ft-fn">brightermonday.py</span><span class="ft-fd">HTML scraper &mdash; East Africa jobs</span></div>
+        <div class="ft-row"><span class="ft-fn">fuzu.py</span><span class="ft-fd">HTML scraper &mdash; Africa-focused platform</span></div>
+        <div class="ft-row"><span class="ft-fn">indeed_kenya.py</span><span class="ft-fd">HTML scraper &mdash; filtered to Kenya</span></div>
+        <div class="ft-row"><span class="ft-fn">linkedin.py</span><span class="ft-fd">Playwright &mdash; non-Easy-Apply filter built in</span></div>
+        <div class="ft-row"><span class="ft-fn">remotive.py</span><span class="ft-fd">RSS feed parser &mdash; global remote tech jobs</span></div>
+        <div class="ft-row"><span class="ft-fn">weworkremotely.py</span><span class="ft-fd">RSS feed parser &mdash; remote jobs feed</span></div>
+        <div class="ft-row"><span class="ft-fn">google_jobs.py</span><span class="ft-fd">SerpAPI free tier &mdash; Google Jobs results</span></div>
+      </div>
+    </div>
+
+    <!-- app/scoring/ -->
+    <div class="ft-module">
+      <div class="ft-mhead ftm-blue">
+        <span class="ft-mname">&#128193; app/scoring/</span>
+        <span class="ft-mlabel">AI scoring pipeline &mdash; runs at 08:00 EAT on new jobs</span>
+      </div>
+      <div class="ft-mfiles">
+        <div class="ft-row"><span class="ft-fn">skill_scorer.py</span><span class="ft-fd">AI skill match &mdash; score 0&ndash;100 vs your CV</span></div>
+        <div class="ft-row"><span class="ft-fn">hire_scorer.py</span><span class="ft-fd">Geo/hire probability &mdash; do they hire Kenyans?</span></div>
+        <div class="ft-row"><span class="ft-fn">deduplicator.py</span><span class="ft-fd">Hash-based dedup &mdash; skips already-seen jobs</span></div>
+      </div>
+    </div>
+
+    <!-- app/cv_engine/ -->
+    <div class="ft-module">
+      <div class="ft-mhead ftm-purple">
+        <span class="ft-mname">&#128193; app/cv_engine/</span>
+        <span class="ft-mlabel">ATS-compliant CV + cover letter generation &mdash; self-scoring loop until &ge;85%</span>
+      </div>
+      <div class="ft-mfiles">
+        <div class="ft-row"><span class="ft-fn">master_cv.py</span><span class="ft-fd">Load and update master CV JSON profile</span></div>
+        <div class="ft-row"><span class="ft-fn">keyword_extractor.py</span><span class="ft-fd">Extract and rank ATS keywords from job description</span></div>
+        <div class="ft-row"><span class="ft-fn">ats_scorer.py</span><span class="ft-fd">Simulate ATS scan &mdash; outputs keyword coverage %</span></div>
+        <div class="ft-row"><span class="ft-fn">tailor.py</span><span class="ft-fd">AI CV tailoring &mdash; regenerates until ATS score &ge;85%</span></div>
+        <div class="ft-row"><span class="ft-fn">cover_letter.py</span><span class="ft-fd">AI cover letter generation &mdash; role-specific</span></div>
+        <div class="ft-row"><span class="ft-fn">pdf_generator.py</span><span class="ft-fd">ReportLab ATS-safe PDF &mdash; single-column, no tables</span></div>
+        <div class="ft-row"><span class="ft-fn">docx_generator.py</span><span class="ft-fd">python-docx .docx output for ATS systems that prefer Word</span></div>
+      </div>
+    </div>
+
+    <!-- app/submission/ -->
+    <div class="ft-module">
+      <div class="ft-mhead ftm-teal">
+        <span class="ft-mname">&#128193; app/submission/</span>
+        <span class="ft-mlabel">Application delivery &mdash; email and web form automation, runs 09:30 EAT</span>
+      </div>
+      <div class="ft-mfiles">
+        <div class="ft-row"><span class="ft-fn">email_sender.py</span><span class="ft-fd">Gmail API OAuth2 &mdash; sends application email with CV attached</span></div>
+        <div class="ft-row"><span class="ft-fn">form_filler.py</span><span class="ft-fd">Playwright &mdash; fills and submits company web application forms</span></div>
+        <div class="ft-row"><span class="ft-fn">rate_limiter.py</span><span class="ft-fd">Daily cap enforcement &mdash; max 15 applications per day</span></div>
+      </div>
+    </div>
+
+    <!-- app/tracking/ + app/ai/ -->
+    <div class="ft-module">
+      <div class="ft-mhead ftm-green">
+        <span class="ft-mname">&#128193; app/tracking/ &nbsp;&amp;&nbsp; app/ai/</span>
+        <span class="ft-mlabel">Database layer and AI client with Gemini &rarr; Groq &rarr; Ollama fallback</span>
+      </div>
+      <div class="ft-mfiles">
+        <div class="ft-subfolder">&#128193; tracking/</div>
+        <div class="ft-row"><span class="ft-fn">db.py</span><span class="ft-fd">SQLite interface &mdash; shared read/write with dashboard</span></div>
+        <div class="ft-subfolder">&#128193; ai/</div>
+        <div class="ft-row"><span class="ft-fn">client.py</span><span class="ft-fd">AI fallback chain &mdash; Gemini &rarr; Groq &rarr; Ollama</span></div>
+        <div class="ft-subfolder">&#128193; ai/prompts/</div>
+        <div class="ft-row"><span class="ft-fn">skill_score.j2</span><span class="ft-fd">Jinja2 prompt template for skill scoring</span></div>
+        <div class="ft-row"><span class="ft-fn">hire_score.j2</span><span class="ft-fd">Jinja2 prompt template for hire probability scoring</span></div>
+        <div class="ft-row"><span class="ft-fn">cv_tailor.j2</span><span class="ft-fd">Jinja2 prompt template for CV tailoring</span></div>
+        <div class="ft-row"><span class="ft-fn">cover_letter.j2</span><span class="ft-fd">Jinja2 prompt template for cover letter generation</span></div>
+      </div>
+    </div>
+
+    <!-- app/ root files -->
+    <div class="ft-module">
+      <div class="ft-mhead ftm-amber">
+        <span class="ft-mname">&#128196; app/ core files</span>
+        <span class="ft-mlabel">Entry point, scheduler, and configuration</span>
+      </div>
+      <div class="ft-mfiles">
+        <div class="ft-row"><span class="ft-fn">scheduler.py</span><span class="ft-fd">APScheduler &mdash; wires together the full daily pipeline</span></div>
+        <div class="ft-row"><span class="ft-fn">main.py</span><span class="ft-fd">Entry point &mdash; starts the engine container</span></div>
+        <div class="ft-row"><span class="ft-fn">config.py</span><span class="ft-fd">Loads and validates all settings from .env</span></div>
+      </div>
+    </div>
+
+    <!-- dashboard/ -->
+    <div class="ft-module">
+      <div class="ft-mhead ftm-blue">
+        <span class="ft-mname">&#128193; dashboard/</span>
+        <span class="ft-mlabel">FastAPI web dashboard &mdash; your control panel at port 8000</span>
+      </div>
+      <div class="ft-mfiles">
+        <div class="ft-row"><span class="ft-fn">main.py</span><span class="ft-fd">FastAPI app &mdash; mounts all routes and auth middleware</span></div>
+        <div class="ft-row"><span class="ft-fn">auth.py</span><span class="ft-fd">Session cookie logic using itsdangerous signed tokens</span></div>
+        <div class="ft-subfolder">&#128193; routes/</div>
+        <div class="ft-row"><span class="ft-fn">pipeline.py</span><span class="ft-fd">/pipeline &mdash; full applications table with status</span></div>
+        <div class="ft-row"><span class="ft-fn">feed.py</span><span class="ft-fd">/feed &mdash; today's scored jobs ready to review</span></div>
+        <div class="ft-row"><span class="ft-fn">projects.py</span><span class="ft-fd">/projects &mdash; log new projects to update your master CV</span></div>
+        <div class="ft-row"><span class="ft-fn">stats.py</span><span class="ft-fd">/stats &mdash; response rate charts and pipeline analytics</span></div>
+        <div class="ft-row"><span class="ft-fn">api.py</span><span class="ft-fd">/api/* &mdash; REST endpoints for n8n webhook callbacks</span></div>
+        <div class="ft-subfolder">&#128193; templates/</div>
+        <div class="ft-row"><span class="ft-fn">base.html</span><span class="ft-fd">Shared layout, navigation, and styles</span></div>
+        <div class="ft-row"><span class="ft-fn">login.html &nbsp;/&nbsp; pipeline.html</span><span class="ft-fd">Login page and main applications view</span></div>
+        <div class="ft-row"><span class="ft-fn">feed.html &nbsp;/&nbsp; stats.html</span><span class="ft-fd">Job feed and analytics views</span></div>
+        <div class="ft-row"><span class="ft-fn">projects.html</span><span class="ft-fd">Project log form &mdash; updates master CV</span></div>
+      </div>
+    </div>
+
+    <!-- data/ + storage/ + root configs -->
+    <div class="ft-module">
+      <div class="ft-mhead ftm-navy">
+        <span class="ft-mname">&#128193; data/ &nbsp;&amp;&nbsp; storage/ &nbsp;&amp;&nbsp; root configs</span>
+        <span class="ft-mlabel">Persistent data, generated files, and deployment configuration</span>
+      </div>
+      <div class="ft-mfiles">
+        <div class="ft-subfolder">&#128193; data/ &mdash; persistent storage (mounted into containers)</div>
+        <div class="ft-row"><span class="ft-fn">jobs.db</span><span class="ft-fd">SQLite database &mdash; all jobs, scores, and applications</span></div>
+        <div class="ft-row"><span class="ft-fn">master_cv.json</span><span class="ft-fd">Your living CV profile &mdash; updated as you add projects</span></div>
+        <div class="ft-subfolder">&#128193; storage/applications/{job_id}/ &mdash; per-application files</div>
+        <div class="ft-row"><span class="ft-fn">cv.pdf</span><span class="ft-fd">Tailored ATS-compliant PDF generated for this role</span></div>
+        <div class="ft-row"><span class="ft-fn">cover_letter.txt</span><span class="ft-fd">AI-written cover letter for this role</span></div>
+        <div class="ft-row"><span class="ft-fn">screenshot.png</span><span class="ft-fd">Playwright proof of form submission</span></div>
+        <div class="ft-subfolder">&#128196; root &mdash; deployment files</div>
+        <div class="ft-row"><span class="ft-fn">docker-compose.yml</span><span class="ft-fd">Defines and wires together all 5 services</span></div>
+        <div class="ft-row"><span class="ft-fn">nginx.conf</span><span class="ft-fd">Reverse proxy rules &mdash; routes traffic to dashboard and n8n</span></div>
+        <div class="ft-row"><span class="ft-fn">.env</span><span class="ft-fd">All secrets &mdash; API keys, passwords. Never committed to git</span></div>
+        <div class="ft-row"><span class="ft-fn">.gitignore</span><span class="ft-fd">Blocks .env, data/, storage/ from being committed</span></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</section>
+
+<footer>
+  <strong>Job Automation System</strong> &mdash; Architecture v1.0 &middot; Phase 1 of 3<br/>
+  Oracle Cloud Always Free &nbsp;&middot;&nbsp; Python + Playwright + n8n &nbsp;&middot;&nbsp; Gemini + Groq + Ollama &nbsp;&middot;&nbsp; 100% Free Stack
+</footer>
+
+</body>
+</html>

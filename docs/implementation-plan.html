@@ -1,0 +1,1978 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Job Automation System — Implementation Plan</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#F6F2EB;
+  --surface:#FFFEFB;
+  --card:#FFFFFF;
+  --border:#E4DDD0;
+  --border-strong:#C8BBA8;
+  --text:#1C1812;
+  --muted:#8A7F72;
+  --navy:#1B2B4B;
+  --amber:#C4581A;
+  --amber-light:#FEF3E2;
+  --amber-mid:#F59E4A;
+  --blue:#1A4D8A;
+  --blue-light:#EFF4FB;
+  --purple:#5B3090;
+  --purple-light:#F3EDFC;
+  --teal:#1A6B55;
+  --teal-light:#EDFAF5;
+  --red:#B91C1C;
+  --red-light:#FEF2F2;
+  --green:#166534;
+  --green-light:#F0FDF4;
+  --slate:#374151;
+  --slate-light:#F9FAFB;
+  --shadow-sm:0 1px 3px rgba(27,43,75,0.07),0 2px 8px rgba(27,43,75,0.04);
+  --shadow:0 2px 6px rgba(27,43,75,0.08),0 8px 24px rgba(27,43,75,0.06);
+  --shadow-lg:0 8px 32px rgba(27,43,75,0.12);
+  --radius:12px;
+}
+
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:Georgia,'Times New Roman',serif;
+  font-size:15px;
+  line-height:1.65;
+}
+body::before{
+  content:'';
+  position:fixed;inset:0;
+  background-image:radial-gradient(circle,#C8B9A0 1px,transparent 1px);
+  background-size:28px 28px;
+  opacity:0.22;
+  pointer-events:none;
+  z-index:0;
+}
+*{position:relative;z-index:1}
+
+h1,h2,h3,h4,h5{font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif}
+code,pre,.mono{font-family:Consolas,'Courier New',monospace}
+
+/* ── TOP BAR ── */
+.topbar{
+  background:var(--navy);
+  color:white;
+  padding:0 40px;
+  display:flex;align-items:center;gap:0;
+  position:sticky;top:0;z-index:200;
+}
+.tb-logo{
+  font-weight:800;font-size:0.82rem;
+  letter-spacing:0px;
+  color:#F59E4A;
+  white-space:nowrap;
+  padding:14px 20px 14px 0;
+  border-right:1px solid rgba(255,255,255,0.1);
+  margin-right:18px;
+  text-transform:uppercase;
+  font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;
+}
+.tb-nav{
+  display:flex;align-items:center;gap:0;
+  overflow-x:auto;scrollbar-width:none;flex:1;
+}
+.tb-nav::-webkit-scrollbar{display:none}
+.tb-nav a{
+  font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;
+  font-size:0.74rem;font-weight:600;
+  color:rgba(255,255,255,0.55);
+  text-decoration:none;
+  padding:14px 14px;
+  white-space:nowrap;
+  border-bottom:2px solid transparent;
+  transition:color .2s,border-color .2s;
+}
+.tb-nav a:hover{color:white;border-bottom-color:#F59E4A}
+.tb-doc-link{
+  margin-left:auto;
+  font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;
+  font-size:0.72rem;font-weight:600;
+  color:rgba(255,255,255,0.45);
+  text-decoration:none;
+  padding:14px 0;
+  white-space:nowrap;
+  flex-shrink:0;
+}
+.tb-doc-link:hover{color:rgba(255,255,255,0.8)}
+
+/* ── HERO ── */
+.hero{
+  background:var(--navy);
+  padding:48px 40px 40px;
+  color:white;
+  border-bottom:3px solid var(--amber);
+}
+.hero-inner{max-width:1100px;margin:0 auto}
+.hero-eyebrow{
+  font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;
+  font-size:0.72rem;font-weight:600;
+  letter-spacing:1px;text-transform:uppercase;
+  color:#F59E4A;
+  margin-bottom:14px;
+  display:flex;align-items:center;gap:10px;
+}
+.hero-eyebrow::after{
+  content:'';flex:1;height:1px;
+  background:rgba(255,255,255,0.12);
+  max-width:300px;
+}
+.hero h1{
+  font-size:clamp(1.8rem,4vw,2.8rem);
+  font-weight:800;
+  line-height:1.15;
+  letter-spacing:-0.5px;
+  margin-bottom:10px;
+}
+.hero h1 em{
+  color:#F59E4A;
+  font-style:italic;
+  font-family:Georgia,serif;
+}
+.hero-sub{
+  color:rgba(255,255,255,0.6);
+  font-size:0.92rem;
+  font-style:italic;
+  margin-bottom:36px;
+  max-width:520px;
+}
+.hero-stats{
+  display:flex;flex-wrap:wrap;gap:32px;
+  padding:24px 0;
+  border-top:1px solid rgba(255,255,255,0.1);
+}
+.hero-stat{display:flex;flex-direction:column;gap:3px}
+.hs-num{
+  font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;
+  font-size:2.2rem;font-weight:800;
+  line-height:1;
+  color:white;
+}
+.hs-label{
+  font-size:0.76rem;color:rgba(255,255,255,0.45);
+  font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;
+  font-style:italic;
+}
+
+/* ── PROGRESS BAR ── */
+.progress-wrap{
+  background:var(--card);
+  border-bottom:1px solid var(--border);
+  padding:20px 40px;
+  position:sticky;top:49px;z-index:180;
+}
+.progress-inner{max-width:1100px;margin:0 auto;display:flex;align-items:center;gap:20px}
+.progress-label{
+  font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;
+  font-size:0.75rem;font-weight:700;
+  color:var(--muted);
+  white-space:nowrap;
+}
+.progress-bar{
+  flex:1;height:8px;
+  background:var(--border);
+  border-radius:999px;
+  overflow:hidden;
+}
+.progress-fill{
+  height:100%;
+  background:linear-gradient(90deg,var(--amber),var(--amber-mid));
+  border-radius:999px;
+  width:0%;
+  transition:width 0.6s ease;
+}
+.progress-pct{
+  font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;
+  font-size:0.78rem;font-weight:800;
+  color:var(--amber);
+  white-space:nowrap;
+  min-width:36px;
+}
+
+/* ── MAIN LAYOUT ── */
+.container{max-width:1100px;margin:0 auto;padding:0 40px}
+.main-grid{
+  display:grid;
+  grid-template-columns:220px 1fr;
+  gap:40px;
+  padding:40px 40px;
+  max-width:1100px;
+  margin:0 auto;
+  align-items:start;
+}
+
+/* ── SIDEBAR NAV ── */
+.sidebar{
+  position:sticky;top:100px;
+  display:flex;flex-direction:column;gap:4px;
+}
+.sb-title{
+  font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;
+  font-size:0.68rem;font-weight:700;
+  letter-spacing:1px;text-transform:uppercase;
+  color:var(--muted);
+  margin-bottom:10px;padding-bottom:8px;
+  border-bottom:1px solid var(--border);
+}
+.sb-link{
+  display:flex;align-items:center;gap:8px;
+  padding:7px 10px;border-radius:8px;
+  font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;
+  font-size:0.79rem;font-weight:600;
+  color:var(--muted);
+  text-decoration:none;
+  transition:background .15s,color .15s;
+  border:1px solid transparent;
+}
+.sb-link:hover{background:var(--card);color:var(--navy);border-color:var(--border)}
+.sb-link.active{background:var(--amber-light);color:var(--amber);border-color:var(--amber-mid)}
+.sb-link.done{color:var(--green);opacity:0.7}
+.sb-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;background:var(--border)}
+.sb-dot.dot-pending{background:var(--border)}
+.sb-dot.dot-active{background:var(--amber)}
+.sb-dot.dot-done{background:var(--green)}
+
+/* ── FOCUS CARD (start here) ── */
+.focus-card{
+  background:linear-gradient(135deg,var(--amber) 0%,#D4691E 100%);
+  color:white;
+  border-radius:var(--radius);
+  padding:24px 28px;
+  margin-bottom:32px;
+  box-shadow:0 4px 20px rgba(196,88,26,0.3);
+}
+.fc-eyebrow{
+  font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;
+  font-size:0.68rem;font-weight:700;
+  letter-spacing:1.5px;text-transform:uppercase;
+  opacity:0.75;margin-bottom:6px;
+}
+.fc-title{
+  font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;
+  font-weight:800;font-size:1.15rem;
+  margin-bottom:6px;
+}
+.fc-desc{
+  font-size:0.86rem;opacity:0.85;
+  line-height:1.6;
+}
+
+/* ── PHASE SECTIONS ── */
+.phases{display:flex;flex-direction:column;gap:16px}
+.phase{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  overflow:hidden;
+  box-shadow:var(--shadow-sm);
+  transition:box-shadow .2s;
+}
+.phase:hover{box-shadow:var(--shadow)}
+
+details summary{list-style:none;cursor:pointer}
+details summary::-webkit-details-marker{display:none}
+
+.phase-header{
+  display:flex;align-items:center;gap:14px;
+  padding:18px 22px;
+  background:var(--surface);
+  border-bottom:1px solid var(--border);
+  user-select:none;
+  border-left:4px solid;
+}
+.phase-header:hover{background:var(--card)}
+
+/* Phase accent colors */
+.phase-0 .phase-header{border-left-color:var(--slate)}
+.phase-1 .phase-header{border-left-color:var(--navy)}
+.phase-2 .phase-header{border-left-color:var(--teal)}
+.phase-3 .phase-header{border-left-color:var(--purple)}
+.phase-4 .phase-header{border-left-color:var(--amber)}
+.phase-5 .phase-header{border-left-color:var(--red)}
+.phase-6 .phase-header{border-left-color:var(--blue)}
+.phase-7 .phase-header{border-left-color:var(--blue)}
+.phase-8 .phase-header{border-left-color:var(--purple)}
+.phase-9 .phase-header{border-left-color:var(--teal)}
+.phase-10 .phase-header{border-left-color:var(--green)}
+
+.phase-num{
+  width:36px;height:36px;border-radius:50%;
+  background:var(--bg);border:2px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;
+  font-weight:800;font-size:0.8rem;
+  color:var(--muted);
+  flex-shrink:0;
+}
+.phase-num.num-active{background:var(--amber-light);border-color:var(--amber-mid);color:var(--amber)}
+.phase-num.num-done{background:var(--green-light);border-color:#86EFAC;color:var(--green)}
+
+.phase-info{flex:1}
+.phase-name{
+  font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;
+  font-weight:800;font-size:0.98rem;
+  color:var(--navy);
+  margin-bottom:2px;
+}
+.phase-tagline{font-size:0.8rem;color:var(--muted);font-style:italic}
+
+.phase-meta{display:flex;align-items:center;gap:10px;flex-shrink:0}
+.phase-pill{
+  padding:3px 9px;border-radius:4px;
+  font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;
+  font-size:0.68rem;font-weight:700;
+}
+.pill-pending{background:var(--bg);color:var(--muted);border:1px solid var(--border)}
+.pill-active{background:var(--amber-light);color:var(--amber);border:1px solid var(--amber-mid)}
+.pill-done{background:var(--green-light);color:var(--green);border:1px solid #86EFAC}
+.pill-blocked{background:var(--red-light);color:var(--red);border:1px solid #FECACA}
+
+.phase-task-count{
+  font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;
+  font-size:0.75rem;font-weight:600;
+  color:var(--muted);
+  white-space:nowrap;
+}
+.chevron{
+  font-size:0.7rem;color:var(--muted);
+  transition:transform .2s;flex-shrink:0;
+}
+details[open] .chevron{transform:rotate(90deg)}
+
+/* ── PHASE BODY ── */
+.phase-body{padding:22px}
+
+.phase-goal{
+  font-size:0.88rem;color:var(--text);
+  line-height:1.7;
+  margin-bottom:22px;
+  padding-bottom:18px;
+  border-bottom:1px solid var(--border);
+}
+.phase-goal strong{
+  font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;
+  font-weight:700;color:var(--navy);
+}
+
+.phase-sections{display:grid;grid-template-columns:1fr 280px;gap:24px}
+
+/* ── TASK LIST ── */
+.tasks-label{
+  font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;
+  font-size:0.68rem;font-weight:700;
+  letter-spacing:1px;text-transform:uppercase;
+  color:var(--muted);
+  margin-bottom:10px;
+}
+.task-list{display:flex;flex-direction:column;gap:2px}
+.task{
+  display:flex;align-items:flex-start;gap:10px;
+  padding:10px 12px;border-radius:8px;
+  transition:background .15s;
+  border:1px solid transparent;
+}
+.task:hover{background:var(--bg);border-color:var(--border)}
+
+/* Task status variants */
+.task-done{opacity:0.6}
+.task-done .task-text{text-decoration:line-through;color:var(--muted)}
+.task-active{background:var(--amber-light);border-color:var(--amber-mid) !important}
+
+.task-check{
+  width:18px;height:18px;border-radius:4px;
+  border:2px solid var(--border);
+  flex-shrink:0;margin-top:1px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:0.65rem;
+}
+.task-done .task-check{
+  background:var(--green-light);border-color:#86EFAC;
+  color:var(--green);
+}
+.task-active .task-check{
+  background:var(--amber-light);border-color:var(--amber-mid);
+  color:var(--amber);
+}
+
+.task-content{flex:1}
+.task-text{font-size:0.875rem;color:var(--text);line-height:1.5}
+.task-note{font-size:0.77rem;color:var(--muted);font-style:italic;margin-top:2px;line-height:1.5}
+
+.task-status{
+  flex-shrink:0;
+  font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;
+  font-size:0.65rem;font-weight:700;
+  padding:2px 7px;border-radius:3px;
+  margin-top:2px;
+}
+.ts-pending{background:var(--bg);color:var(--muted);border:1px solid var(--border)}
+.ts-active{background:var(--amber-light);color:var(--amber);border:1px solid var(--amber-mid)}
+.ts-done{background:var(--green-light);color:var(--green);border:1px solid #86EFAC}
+
+/* ── RIGHT SIDEBAR (files + deps) ── */
+.phase-sidebar{display:flex;flex-direction:column;gap:18px}
+
+.info-card{
+  background:var(--bg);
+  border:1px solid var(--border);
+  border-radius:10px;
+  overflow:hidden;
+}
+.ic-head{
+  padding:9px 14px;
+  border-bottom:1px solid var(--border);
+  font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;
+  font-size:0.68rem;font-weight:700;
+  letter-spacing:1px;text-transform:uppercase;
+  color:var(--muted);
+  background:var(--card);
+}
+.ic-body{padding:10px 14px;display:flex;flex-direction:column;gap:6px}
+.file-item{
+  display:flex;align-items:baseline;gap:6px;
+  font-size:0.78rem;
+}
+.file-dot{color:var(--muted);flex-shrink:0;font-size:0.6rem}
+.file-name{
+  font-family:Consolas,'Courier New',monospace;
+  font-size:0.76rem;color:var(--blue);
+  font-weight:600;
+}
+.file-desc{color:var(--muted);font-size:0.73rem;font-style:italic}
+
+.dep-item{
+  display:flex;align-items:center;gap:6px;
+  font-size:0.78rem;color:var(--muted);
+}
+.dep-num{
+  font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;
+  font-weight:700;font-size:0.68rem;
+  background:var(--card);border:1px solid var(--border);
+  padding:1px 6px;border-radius:4px;
+  color:var(--slate);
+  flex-shrink:0;
+}
+
+.note-text{
+  font-size:0.8rem;color:var(--text);
+  line-height:1.65;padding:2px 0;
+}
+.note-text strong{
+  font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;
+  font-weight:700;color:var(--navy);
+}
+
+/* ── LEGEND ── */
+.legend{
+  background:var(--card);
+  border-top:1px solid var(--border);
+  padding:24px 40px;
+  display:flex;align-items:center;gap:32px;flex-wrap:wrap;
+}
+.legend-title{
+  font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;
+  font-size:0.72rem;font-weight:700;
+  letter-spacing:1px;text-transform:uppercase;
+  color:var(--muted);
+}
+.legend-item{
+  display:flex;align-items:center;gap:7px;
+  font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;
+  font-size:0.78rem;font-weight:600;
+  color:var(--slate);
+}
+.legend-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+
+/* ── FOOTER ── */
+footer{
+  text-align:center;padding:36px 40px;
+  border-top:1px solid var(--border);
+  color:var(--muted);font-size:0.82rem;
+  font-style:italic;
+}
+footer strong{
+  font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;
+  font-style:normal;color:var(--navy);
+}
+
+/* ── RESPONSIVE ── */
+@media(max-width:900px){
+  .main-grid{grid-template-columns:1fr;padding:24px 20px}
+  .sidebar{position:static;display:none}
+  .phase-sections{grid-template-columns:1fr}
+  .topbar,.hero,.progress-wrap{padding-left:20px;padding-right:20px}
+  .legend{padding:20px}
+}
+@media(max-width:600px){
+  .hero-stats{gap:20px}
+  .hs-num{font-size:1.6rem}
+}
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<nav class="topbar">
+  <div class="tb-logo">Job Automation</div>
+  <div class="tb-nav">
+    <a href="#phase-0">0. Foundation</a>
+    <a href="#phase-1">1. Database</a>
+    <a href="#phase-2">2. Scrapers</a>
+    <a href="#phase-3">3. AI + Scoring</a>
+    <a href="#phase-4">4. CV Engine</a>
+    <a href="#phase-5">5. Submission</a>
+    <a href="#phase-6">6. Scheduler</a>
+    <a href="#phase-7">7. Dashboard</a>
+    <a href="#phase-8">8. n8n</a>
+    <a href="#phase-9">9. Nginx + HTTPS</a>
+    <a href="#phase-10">10. Go-Live</a>
+  </div>
+  <a class="tb-doc-link" href="architecture.html">&larr; Architecture Doc</a>
+</nav>
+
+<!-- HERO -->
+<header class="hero">
+  <div class="hero-inner">
+    <div class="hero-eyebrow">Engine 1 of 3 &mdash; Job Application Automation</div>
+    <h1>Build Plan &amp; <em>Progress Tracker</em></h1>
+    <p class="hero-sub">Phase-by-phase guide from empty VPS to fully autonomous job application system. Update this file as each task is completed.</p>
+    <div class="hero-stats">
+      <div class="hero-stat"><span class="hs-num">11</span><span class="hs-label">Phases</span></div>
+      <div class="hero-stat"><span class="hs-num">69</span><span class="hs-label">Total Tasks</span></div>
+      <div class="hero-stat"><span class="hs-num">41</span><span class="hs-label">Files to Create</span></div>
+      <div class="hero-stat"><span class="hs-num">5</span><span class="hs-label">Docker Services</span></div>
+      <div class="hero-stat"><span class="hs-num">$0</span><span class="hs-label">Monthly Cost</span></div>
+    </div>
+  </div>
+</header>
+
+<!-- PROGRESS BAR -->
+<div class="progress-wrap">
+  <div class="progress-inner">
+    <span class="progress-label">Overall progress</span>
+    <div class="progress-bar"><div class="progress-fill" style="width:0%"></div></div>
+    <span class="progress-pct">0%</span>
+    <span class="progress-label" style="color:var(--text)">0 of 69 tasks done</span>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main-grid">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sb-title">Jump to phase</div>
+    <a class="sb-link active" href="#phase-0"><span class="sb-dot dot-active"></span>0 &mdash; Foundation</a>
+    <a class="sb-link" href="#phase-1"><span class="sb-dot dot-pending"></span>1 &mdash; Database</a>
+    <a class="sb-link" href="#phase-2"><span class="sb-dot dot-pending"></span>2 &mdash; Scrapers</a>
+    <a class="sb-link" href="#phase-3"><span class="sb-dot dot-pending"></span>3 &mdash; AI + Scoring</a>
+    <a class="sb-link" href="#phase-4"><span class="sb-dot dot-pending"></span>4 &mdash; CV Engine</a>
+    <a class="sb-link" href="#phase-5"><span class="sb-dot dot-pending"></span>5 &mdash; Submission</a>
+    <a class="sb-link" href="#phase-6"><span class="sb-dot dot-pending"></span>6 &mdash; Scheduler</a>
+    <a class="sb-link" href="#phase-7"><span class="sb-dot dot-pending"></span>7 &mdash; Dashboard</a>
+    <a class="sb-link" href="#phase-8"><span class="sb-dot dot-pending"></span>8 &mdash; n8n</a>
+    <a class="sb-link" href="#phase-9"><span class="sb-dot dot-pending"></span>9 &mdash; Nginx</a>
+    <a class="sb-link" href="#phase-10"><span class="sb-dot dot-pending"></span>10 &mdash; Go-Live</a>
+  </aside>
+
+  <!-- PHASES COLUMN -->
+  <div>
+
+    <!-- ─── FOCUS CARD ─── -->
+    <div class="focus-card">
+      <div class="fc-eyebrow">&#9658; Start Here &mdash; Current Focus</div>
+      <div class="fc-title">Phase 1: Database &amp; Master CV</div>
+      <p class="fc-desc">Build everything on your laptop first. Start with the database schema and your master CV JSON &mdash; these are the foundation every other module reads from. VPS setup comes last, once the full system works locally.</p>
+    </div>
+
+    <!-- ─── PHASES ─── -->
+    <div class="phases">
+
+      <!-- ════════════ PHASE 0 ════════════ -->
+      <div class="phase phase-0" id="phase-0">
+        <details open>
+          <summary>
+            <div class="phase-header">
+              <div class="phase-num num-active">0</div>
+              <div class="phase-info">
+                <div class="phase-name">Foundation &amp; Infrastructure</div>
+                <div class="phase-tagline">Oracle Cloud VPS &middot; Docker Compose &middot; Project skeleton</div>
+              </div>
+              <div class="phase-meta">
+                <span class="phase-pill pill-active">In Progress</span>
+                <span class="phase-task-count">9 tasks</span>
+                <span class="chevron">&#9658;</span>
+              </div>
+            </div>
+          </summary>
+          <div class="phase-body">
+            <p class="phase-goal"><strong>Goal:</strong> A running VPS accessible via SSH, with Docker installed, the project directory structure in place, a populated <code>.env</code> file, and a firewall blocking everything except SSH + HTTP + HTTPS. At the end of this phase you can run <code>docker compose up</code> and all 5 services start (even if they don't do anything yet).</p>
+            <div class="phase-sections">
+              <div>
+                <div class="tasks-label">Tasks</div>
+                <div class="task-list">
+                  <div class="task">
+                    <div class="task-check"></div>
+                    <div class="task-content">
+                      <div class="task-text">Create Oracle Cloud Always Free account and provision ARM A1 instance</div>
+                      <div class="task-note">Shape: VM.Standard.A1.Flex &middot; 4 vCPU &middot; 24 GB RAM &middot; Ubuntu 22.04 LTS &middot; generate an SSH key pair during setup</div>
+                    </div>
+                    <span class="task-status ts-pending">Pending</span>
+                  </div>
+                  <div class="task">
+                    <div class="task-check"></div>
+                    <div class="task-content">
+                      <div class="task-text">Harden SSH: disable password auth, disable root login, SSH keys only</div>
+                      <div class="task-note">Edit <code>/etc/ssh/sshd_config</code>: PasswordAuthentication no &middot; PermitRootLogin no &middot; restart sshd</div>
+                    </div>
+                    <span class="task-status ts-pending">Pending</span>
+                  </div>
+                  <div class="task">
+                    <div class="task-check"></div>
+                    <div class="task-content">
+                      <div class="task-text">Configure UFW firewall: allow 22 (SSH), 80 (HTTP), 443 (HTTPS) — deny everything else</div>
+                      <div class="task-note"><code>ufw allow 22 &amp;&amp; ufw allow 80 &amp;&amp; ufw allow 443 &amp;&amp; ufw enable</code></div>
+                    </div>
+                    <span class="task-status ts-pending">Pending</span>
+                  </div>
+                  <div class="task">
+                    <div class="task-check"></div>
+                    <div class="task-content">
+                      <div class="task-text">Install Docker Engine + Docker Compose plugin (ARM-compatible)</div>
+                      <div class="task-note">Use official Docker install script for Ubuntu: <code>curl -fsSL https://get.docker.com | sh</code> — verify <code>docker compose version</code> works</div>
+                    </div>
+                    <span class="task-status ts-pending">Pending</span>
+                  </div>
+                  <div class="task">
+                    <div class="task-check"></div>
+                    <div class="task-content">
+                      <div class="task-text">Create full project directory structure at <code>/srv/job-automation/</code></div>
+                      <div class="task-note">Matches the file tree in the architecture doc: app/, dashboard/, data/, storage/, n8n_workflows/</div>
+                    </div>
+                    <span class="task-status ts-pending">Pending</span>
+                  </div>
+                  <div class="task">
+                    <div class="task-check"></div>
+                    <div class="task-content">
+                      <div class="task-text">Gather all API keys and populate <code>.env</code> file</div>
+                      <div class="task-note">Keys needed: GEMINI_API_KEY &middot; GROQ_API_KEY &middot; SERPAPI_KEY &middot; GMAIL_CLIENT_ID + CLIENT_SECRET &middot; TELEGRAM_BOT_TOKEN &middot; TELEGRAM_CHAT_ID &middot; DASHBOARD_SECRET_KEY &middot; DASHBOARD_PASSWORD</div>
+                    </div>
+                    <span class="task-status ts-pending">Pending</span>
+                  </div>
+                  <div class="task">
+                    <div class="task-check"></div>
+                    <div class="task-content">
+                      <div class="task-text">Write <code>docker-compose.yml</code> with all 5 services defined (job-engine, dashboard, n8n, ollama, nginx)</div>
+                      <div class="task-note">Services can have placeholder images for now — the goal is the compose file is valid and all services start</div>
+                    </div>
+                    <span class="task-status ts-pending">Pending</span>
+                  </div>
+                  <div class="task">
+                    <div class="task-check"></div>
+                    <div class="task-content">
+                      <div class="task-text">Create <code>.gitignore</code> blocking <code>.env</code>, <code>data/</code>, <code>storage/</code>, <code>__pycache__/</code>, <code>*.pyc</code></div>
+                    </div>
+                    <span class="task-status ts-pending">Pending</span>
+                  </div>
+                  <div class="task">
+                    <div class="task-check"></div>
+                    <div class="task-content">
+                      <div class="task-text">Pull Ollama 7B model (Mistral) — verify it responds to a test prompt</div>
+                      <div class="task-note"><code>docker exec ollama ollama pull mistral:7b</code> &middot; This takes ~4 GB &middot; Run once during setup</div>
+                    </div>
+                    <span class="task-status ts-pending">Pending</span>
+                  </div>
+                </div>
+              </div>
+              <div class="phase-sidebar">
+                <div class="info-card">
+                  <div class="ic-head">Files Created</div>
+                  <div class="ic-body">
+                    <div class="file-item"><span class="file-dot">&#9679;</span><span class="file-name">docker-compose.yml</span></div>
+                    <div class="file-item"><span class="file-dot">&#9679;</span><span class="file-name">.env</span><span class="file-desc">(never committed)</span></div>
+                    <div class="file-item"><span class="file-dot">&#9679;</span><span class="file-name">.gitignore</span></div>
+                    <div class="file-item"><span class="file-dot">&#9679;</span><span class="file-name">nginx.conf</span><span class="file-desc">(skeleton)</span></div>
+                  </div>
+                </div>
+                <div class="info-card">
+                  <div class="ic-head">Dependencies</div>
+                  <div class="ic-body">
+                    <div class="dep-item"><span class="dep-num">none</span> First phase — no dependencies</div>
+                  </div>
+                </div>
+                <div class="info-card">
+                  <div class="ic-head">Done When</div>
+                  <div class="ic-body">
+                    <div class="note-text"><code>docker compose up -d</code> starts all 5 services without errors on the VPS. SSH only works with your key.</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </details>
+      </div>
+
+      <!-- ════════════ PHASE 1 ════════════ -->
+      <div class="phase phase-1" id="phase-1">
+        <details>
+          <summary>
+            <div class="phase-header">
+              <div class="phase-num">1</div>
+              <div class="phase-info">
+                <div class="phase-name">Database Schema &amp; Master CV</div>
+                <div class="phase-tagline">SQLite tables &middot; db.py interface &middot; master_cv.json profile</div>
+              </div>
+              <div class="phase-meta">
+                <span class="phase-pill pill-pending">Not Started</span>
+                <span class="phase-task-count">5 tasks</span>
+                <span class="chevron">&#9658;</span>
+              </div>
+            </div>
+          </summary>
+          <div class="phase-body">
+            <p class="phase-goal"><strong>Goal:</strong> The SQLite database schema is live with all tables, and <code>db.py</code> provides a clean Python interface used by every other module. The <code>master_cv.json</code> file contains your real skills, experience, and projects — this is the source of truth that the CV engine will read and tailor from.</p>
+            <div class="phase-sections">
+              <div>
+                <div class="tasks-label">Tasks</div>
+                <div class="task-list">
+                  <div class="task">
+                    <div class="task-check"></div>
+                    <div class="task-content">
+                      <div class="task-text">Design and create the <code>jobs</code> table in SQLite</div>
+                      <div class="task-note">Fields: id, source, title, company, location, remote_type, salary_range, apply_method (email/form/unknown), apply_url, jd_url, jd_text, jd_hash (for dedup), skill_score, hire_score, status (new/qualified/skipped/applied/ghosted/rejected/offer), created_at</div>
+                    </div>
+                    <span class="task-status ts-pending">Pending</span>
+                  </div>
+                  <div class="task">
+                    <div class="task-check"></div>
+                    <div class="task-content">
+                      <div class="task-text">Design and create the <code>applications</code> table</div>
+                      <div class="task-note">Fields: id, job_id (FK), cv_path, cover_letter_path, ats_score, submitted_at, submission_method, status (applied/follow_up_21_sent/follow_up_30_sent/ghosted/interview/rejected/offer), follow_up_21_at, follow_up_30_at, ghosted_at, notes</div>
+                    </div>
+                    <span class="task-status ts-pending">Pending</span>
+                  </div>
+                  <div class="task">
+                    <div class="task-check"></div>
+                    <div class="task-content">
+                      <div class="task-text">Write <code>app/tracking/db.py</code> with all CRUD operations</div>
+                      <div class="task-note">Functions: insert_job(), get_unscored_jobs(), update_job_score(), insert_application(), get_applications_due_followup(), update_application_status(), get_pipeline_stats()</div>
+                    </div>
+                    <span class="task-status ts-pending">Pending</span>
+                  </div>
+                  <div class="task">
+                    <div class="task-check"></div>
+                    <div class="task-content">
+                      <div class="task-text">Write <code>app/config.py</code> to load and validate all settings from <code>.env</code></div>
+                      <div class="task-note">Use Pydantic Settings or python-decouple. Fail fast with clear errors if required keys are missing.</div>
+                    </div>
+                    <span class="task-status ts-pending">Pending</span>
+                  </div>
+                  <div class="task">
+                    <div class="task-check"></div>
+                    <div class="task-content">
+                      <div class="task-text">Create <code>data/master_cv.json</code> with your real profile data</div>
+                      <div class="task-note">Structure: personal info, summary variants per role (data_analyst / software_engineer / ai_automation), work_experience[], projects[], skills{}, education[], certifications[]. This is your living CV — keep it up to date.</div>
+                    </div>
+                    <span class="task-status ts-pending">Pending</span>
+                  </div>
+                </div>
+              </div>
+              <div class="phase-sidebar">
+                <div class="info-card">
+                  <div class="ic-head">Files Created</div>
+                  <div class="ic-body">
+                    <div class="file-item"><span class="file-dot">&#9679;</span><span class="file-name">app/tracking/db.py</span></div>
+                    <div class="file-item"><span class="file-dot">&#9679;</span><span class="file-name">app/config.py</span></div>
+                    <div class="file-item"><span class="file-dot">&#9679;</span><span class="file-name">data/master_cv.json</span></div>
+                  </div>
+                </div>
+                <div class="info-card">
+                  <div class="ic-head">Dependencies</div>
+                  <div class="ic-body">
+                    <div class="dep-item"><span class="dep-num">Phase 0</span> VPS + Docker running</div>
+                  </div>
+                </div>
+                <div class="info-card">
+                  <div class="ic-head">Done When</div>
+                  <div class="ic-body">
+                    <div class="note-text">Can run a Python script that inserts a fake job, retrieves it, and reads <code>master_cv.json</code> without errors.</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </details>
+      </div>
+
+      <!-- ════════════ PHASE 2 ════════════ -->
+      <div class="phase phase-2" id="phase-2">
+        <details>
+          <summary>
+            <div class="phase-header">
+              <div class="phase-num">2</div>
+              <div class="phase-info">
+                <div class="phase-name">Job Board Scrapers</div>
+                <div class="phase-tagline">8 sources &middot; requests + BeautifulSoup + Playwright &middot; RSS feeds &middot; SerpAPI</div>
+              </div>
+              <div class="phase-meta">
+                <span class="phase-pill pill-pending">Not Started</span>
+                <span class="phase-task-count">10 tasks</span>
+                <span class="chevron">&#9658;</span>
+              </div>
+            </div>
+          </summary>
+          <div class="phase-body">
+            <p class="phase-goal"><strong>Goal:</strong> All 8 scrapers run without errors, write deduplicated job records to SQLite, and capture the minimum required fields per job: title, company, location, apply method (email vs form vs unknown), apply URL, and full job description text. A scraper that can't get the JD text is not done.</p>
+            <div class="phase-sections">
+              <div>
+                <div class="tasks-label">Tasks</div>
+                <div class="task-list">
+                  <div class="task">
+                    <div class="task-check"></div>
+                    <div class="task-content">
+                      <div class="task-text">Write <code>deduplicator.py</code> — SHA-256 hash of (title + company + url), check <code>jd_hash</code> column before insert</div>
+                      <div class="task-note">Must be written first — all scrapers call this before inserting. Returns True if new, False if duplicate.</div>
+                    </div>
+                    <span class="task-status ts-pending">Pending</span>
+                  </div>
+                  <div class="task">
+                    <div class="task-check"></div>
+                    <div class="task-content">
+                      <div class="task-text">Write <code>myjobkenya.py</code> — HTML scraper (requests + BeautifulSoup)</div>
+                      <div class="task-note">Target myjobkenya.com &middot; paginated job listings &middot; extract: title, company, location, salary, deadline, JD URL &middot; follow link to get full JD text &middot; detect apply method from JD page (email address or "Apply Now" button)</div>
+                    </div>
+                    <span class="task-status ts-pending">Pending</span>
+                  </div>
+                  <div class="task">
+                    <div class="task-check"></div>
+                    <div class="task-content">
+                      <div class="task-text">Write <code>brightermonday.py</code> — HTML scraper</div>
+                      <div class="task-note">Target brightermonday.com/ke &middot; Kenya-focused &middot; same field extraction pattern as myjobkenya</div>
+                    </div>
+                    <span class="task-status ts-pending">Pending</span>
+                  </div>
+                  <div class="task">
+                    <div class="task-check"></div>
+                    <div class="task-content">
+                      <div class="task-text">Write <code>fuzu.py</code> &amp; <code>indeed_kenya.py</code> — HTML scrapers</div>
+                      <div class="task-note">fuzu.com (Africa jobs platform) &middot; ke.indeed.com with tech role filters &middot; Respect crawl-delay in robots.txt &middot; Add 1-3s random delays between requests</div>
+                    </div>
+                    <span class="task-status ts-pending">Pending</span>
+                  </div>
+                  <div class="task">
+                    <div class="task-check"></div>
+                    <div class="task-content">
+                      <div class="task-text">Write <code>linkedin.py</code> — Playwright-based, non-Easy-Apply filter</div>
+                      <div class="task-note">Log in once and save session cookies &middot; Search by keyword + location "Nairobi" and "Remote" &middot; Filter out any job where the apply button routes to LinkedIn Easy Apply (check button href) &middot; Only collect jobs with external company apply links</div>
+                    </div>
+                    <span class="task-status ts-pending">Pending</span>
+                  </div>
+                  <div class="task">
+                    <div class="task-check"></div>
+                    <div class="task-content">
+                      <div class="task-text">Write <code>remotive.py</code> &amp; <code>weworkremotely.py</code> — RSS feed parsers</div>
+                      <div class="task-note">Parse XML feed with <code>feedparser</code> or stdlib <code>xml.etree</code> &middot; Filter for relevant categories: software dev, data, devops, automation &middot; Fully free, no rate limits</div>
+                    </div>
+                    <span class="task-status ts-pending">Pending</span>
+                  </div>
+                  <div class="task">
+                    <div class="task-check"></div>
+                    <div class="task-content">
+                      <div class="task-text">Write <code>google_jobs.py</code> — SerpAPI Google Jobs engine</div>
+                      <div class="task-note">100 free searches/month &middot; Run 2-3 queries per day at most &middot; Queries: "data analyst Nairobi", "software engineer remote Africa", "AI automation engineer" &middot; Parse results into standard job dict format</div>
+                    </div>
+                    <span class="task-status ts-pending">Pending</span>
+                  </div>
+                  <div class="task">
+                    <div class="task-check"></div>
+                    <div class="task-content">
+                      <div class="task-text">Add apply method detection logic to all HTML scrapers</div>
+                      <div class="task-note">Scan JD page for: email address pattern (apply_method=&ldquo;email&rdquo;, apply_url=&ldquo;mailto:x&rdquo;) OR form/button that leads to a company-hosted URL (apply_method=&ldquo;form&rdquo;) OR neither (apply_method=&ldquo;unknown&rdquo;, skip)</div>
+                    </div>
+                    <span class="task-status ts-pending">Pending</span>
+                  </div>
+                  <div class="task">
+                    <div class="task-check"></div>
+                    <div class="task-content">
+                      <div class="task-text">Write a scraper runner / coordinator function that calls all 8 in sequence with error isolation</div>
+                      <div class="task-note">Each scraper runs in a try/except — if one fails, log the error and continue to the next. Never let one failing scraper block the others.</div>
+                    </div>
+                    <span class="task-status ts-pending">Pending</span>
+                  </div>
+                  <div class="task">
+                    <div class="task-check"></div>
+                    <div class="task-content">
+                      <div class="task-text">Integration test: run all scrapers once, verify SQLite has populated &gt;20 unique jobs with JD text</div>
+                      <div class="task-note">Check dedup is working (run twice, second run should add 0 new records)</div>
+                    </div>
+                    <span class="task-status ts-pending">Pending</span>
+                  </div>
+                </div>
+              </div>
+              <div class="phase-sidebar">
+                <div class="info-card">
+                  <div class="ic-head">Files Created</div>
+                  <div class="ic-body">
+                    <div class="file-item"><span class="file-dot">&#9679;</span><span class="file-name">app/scrapers/deduplicator.py</span></div>
+                    <div class="file-item"><span class="file-dot">&#9679;</span><span class="file-name">app/scrapers/myjobkenya.py</span></div>
+                    <div class="file-item"><span class="file-dot">&#9679;</span><span class="file-name">app/scrapers/brightermonday.py</span></div>
+                    <div class="file-item"><span class="file-dot">&#9679;</span><span class="file-name">app/scrapers/fuzu.py</span></div>
+                    <div class="file-item"><span class="file-dot">&#9679;</span><span class="file-name">app/scrapers/indeed_kenya.py</span></div>
+                    <div class="file-item"><span class="file-dot">&#9679;</span><span class="file-name">app/scrapers/linkedin.py</span></div>
+                    <div class="file-item"><span class="file-dot">&#9679;</span><span class="file-name">app/scrapers/remotive.py</span></div>
+                    <div class="file-item"><span class="file-dot">&#9679;</span><span class="file-name">app/scrapers/weworkremotely.py</span></div>
+                    <div class="file-item"><span class="file-dot">&#9679;</span><span class="file-name">app/scrapers/google_jobs.py</span></div>
+                  </div>
+                </div>
+                <div class="info-card">
+                  <div class="ic-head">Dependencies</div>
+                  <div class="ic-body">
+                    <div class="dep-item"><span class="dep-num">Phase 1</span> db.py + SQLite schema</div>
+                  </div>
+                </div>
+                <div class="info-card">
+                  <div class="ic-head">Key Rules</div>
+                  <div class="ic-body">
+                    <div class="note-text"><strong>No Easy Apply.</strong> LinkedIn scraper skips any job where the apply button triggers LinkedIn&rsquo;s built-in form. External company links only.</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </details>
+      </div>
+
+      <!-- ════════════ PHASE 3 ════════════ -->
+      <div class="phase phase-3" id="phase-3">
+        <details>
+          <summary>
+            <div class="phase-header">
+              <div class="phase-num">3</div>
+              <div class="phase-info">
+                <div class="phase-name">AI Client &amp; Scoring Engine</div>
+                <div class="phase-tagline">Gemini &rarr; Groq &rarr; Ollama fallback &middot; Skill score &middot; Hire probability score</div>
+              </div>
+              <div class="phase-meta">
+                <span class="phase-pill pill-pending">Not Started</span>
+                <span class="phase-task-count">6 tasks</span>
+                <span class="chevron">&#9658;</span>
+              </div>
+            </div>
+          </summary>
+          <div class="phase-body">
+            <p class="phase-goal"><strong>Goal:</strong> Every new job in SQLite gets two scores: a <strong>skill score</strong> (0&ndash;100, how well your CV matches the JD) and a <strong>hire score</strong> (0&ndash;100, probability this company will hire a Kenyan/African remotely). Only jobs that pass both thresholds (skill &ge;65, hire &ge;60) move to CV generation.</p>
+            <div class="phase-sections">
+              <div>
+                <div class="tasks-label">Tasks</div>
+                <div class="task-list">
+                  <div class="task">
+                    <div class="task-check"></div>
+                    <div class="task-content">
+                      <div class="task-text">Write <code>app/ai/client.py</code> — unified AI client with Gemini &rarr; Groq &rarr; Ollama fallback chain</div>
+                      <div class="task-note">Class <code>AIClient</code> with method <code>generate(prompt: str) &rarr; str</code>. Try Gemini first (google-generativeai SDK) &middot; on RateLimitError or quota exhaustion, fall to Groq (groq SDK) &middot; on Groq failure, fall to Ollama (HTTP call to localhost:11434/api/generate) &middot; raise if all three fail. Log which provider was used per call.</div>
+                    </div>
+                    <span class="task-status ts-pending">Pending</span>
+                  </div>
+                  <div class="task">
+                    <div class="task-check"></div>
+                    <div class="task-content">
+                      <div class="task-text">Write Jinja2 prompt template <code>app/ai/prompts/skill_score.j2</code></div>
+                      <div class="task-note">Inputs: job_description, cv_summary (condensed from master_cv.json) &middot; Output: JSON with fields: score (int 0-100), matched_skills (list), missing_skills (list), reasoning (str). Prompt must force JSON-only output.</div>
+                    </div>
+                    <span class="task-status ts-pending">Pending</span>
+                  </div>
+                  <div class="task">
+                    <div class="task-check"></div>
+                    <div class="task-content">
+                      <div class="task-text">Write Jinja2 prompt template <code>app/ai/prompts/hire_score.j2</code></div>
+                      <div class="task-note">Inputs: job_description, company_name, job_location &middot; Positive signals: mentions of Africa/Kenya/distributed team/no visa required/contractor welcome &middot; Negative signals: US/UK work authorization required, must be based in [specific city], local only &middot; Output: JSON with score + signal list + reasoning</div>
+                    </div>
+                    <span class="task-status ts-pending">Pending</span>
+                  </div>
+                  <div class="task">
+                    <div class="task-check"></div>
+                    <div class="task-content">
+                      <div class="task-text">Write <code>app/scoring/skill_scorer.py</code></div>
+                      <div class="task-note">Render skill_score.j2 with job data &middot; Call AIClient.generate() &middot; Parse JSON response &middot; Update <code>jobs</code> table: skill_score, matched_skills (JSON column), missing_skills (JSON column)</div>
+                    </div>
+                    <span class="task-status ts-pending">Pending</span>
+                  </div>
+                  <div class="task">
+                    <div class="task-check"></div>
+                    <div class="task-content">
+                      <div class="task-text">Write <code>app/scoring/hire_scorer.py</code></div>
+                      <div class="task-note">Same pattern as skill_scorer but using hire_score.j2 &middot; Also check for hard disqualifiers: "must be authorized to work in the US" &rarr; force score to 0. Update <code>jobs</code> table: hire_score, hire_signals (JSON)</div>
+                    </div>
+                    <span class="task-status ts-pending">Pending</span>
+                  </div>
+                  <div class="task">
+                    <div class="task-check"></div>
+                    <div class="task-content">
+                      <div class="task-text">Integration test: score 10 real scraped jobs, manually review scores for sanity</div>
+                      <div class="task-note">Check that jobs requiring US work authorization score &le;10 on hire_score &middot; Check that jobs mentioning "remote Africa" score &ge;70 &middot; Tune prompt if results are off</div>
+                    </div>
+                    <span class="task-status ts-pending">Pending</span>
+                  </div>
+                </div>
+              </div>
+              <div class="phase-sidebar">
+                <div class="info-card">
+                  <div class="ic-head">Files Created</div>
+                  <div class="ic-body">
+                    <div class="file-item"><span class="file-dot">&#9679;</span><span class="file-name">app/ai/client.py</span></div>
+                    <div class="file-item"><span class="file-dot">&#9679;</span><span class="file-name">app/ai/prompts/skill_score.j2</span></div>
+                    <div class="file-item"><span class="file-dot">&#9679;</span><span class="file-name">app/ai/prompts/hire_score.j2</span></div>
+                    <div class="file-item"><span class="file-dot">&#9679;</span><span class="file-name">app/scoring/skill_scorer.py</span></div>
+                    <div class="file-item"><span class="file-dot">&#9679;</span><span class="file-name">app/scoring/hire_scorer.py</span></div>
+                  </div>
+                </div>
+                <div class="info-card">
+                  <div class="ic-head">Dependencies</div>
+                  <div class="ic-body">
+                    <div class="dep-item"><span class="dep-num">Phase 1</span> db.py interface</div>
+                    <div class="dep-item"><span class="dep-num">Phase 2</span> Jobs in SQLite to score</div>
+                  </div>
+                </div>
+                <div class="info-card">
+                  <div class="ic-head">Qualify Threshold</div>
+                  <div class="ic-body">
+                    <div class="note-text">A job qualifies for CV generation when: <strong>skill_score &ge; 65</strong> AND <strong>hire_score &ge; 60</strong>. Adjust these in config.py after first week of data.</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </details>
+      </div>
+
+      <!-- ════════════ PHASE 4 ════════════ -->
+      <div class="phase phase-4" id="phase-4">
+        <details>
+          <summary>
+            <div class="phase-header">
+              <div class="phase-num">4</div>
+              <div class="phase-info">
+                <div class="phase-name">CV Generation Engine</div>
+                <div class="phase-tagline">Keyword extraction &middot; ATS self-scoring loop &middot; PDF + DOCX output</div>
+              </div>
+              <div class="phase-meta">
+                <span class="phase-pill pill-pending">Not Started</span>
+                <span class="phase-task-count">8 tasks</span>
+                <span class="chevron">&#9658;</span>
+              </div>
+            </div>
+          </summary>
+          <div class="phase-body">
+            <p class="phase-goal"><strong>Goal:</strong> Given a job description, generate a tailored CV that passes any ATS system. The engine extracts keywords from the JD, scores the current draft, and regenerates until keyword coverage is &ge;85%. Outputs both a PDF (ATS-safe single-column ReportLab) and a .docx (python-docx). Every keyword must appear verbatim in the CV &mdash; no paraphrasing.</p>
+            <div class="phase-sections">
+              <div>
+                <div class="tasks-label">Tasks</div>
+                <div class="task-list">
+                  <div class="task">
+                    <div class="task-check"></div>
+                    <div class="task-content">
+                      <div class="task-text">Write <code>keyword_extractor.py</code> — extract and rank ATS keywords from job description</div>
+                      <div class="task-note">Use AI to identify: required technical skills (Python, SQL, etc.), tool names (dbt, Airflow, etc.), soft skills used in ATS (cross-functional, stakeholder), job title variants, certifications mentioned. Return as ranked list with frequency weight.</div>
+                    </div>
+                    <span class="task-status ts-pending">Pending</span>
+                  </div>
+                  <div class="task">
+                    <div class="task-check"></div>
+                    <div class="task-content">
+                      <div class="task-text">Write <code>ats_scorer.py</code> — simulate ATS keyword scan, return coverage %</div>
+                      <div class="task-note">Input: cv_text (plain string), keyword_list (from extractor) &middot; For each keyword: check verbatim match (case-insensitive) in cv_text &middot; coverage = matched / total &times; 100 &middot; Return: score, matched list, missing list</div>
+                    </div>
+                    <span class="task-status ts-pending">Pending</span>
+                  </div>
+                  <div class="task">
+                    <div class="task-check"></div>
+                    <div class="task-content">
+                      <div class="task-text">Write Jinja2 prompt template <code>cv_tailor.j2</code></div>
+                      <div class="task-note">Inputs: master_cv_json, job_description, missing_keywords, iteration (1-5) &middot; Instruction: rewrite experience bullet points to naturally incorporate all missing_keywords verbatim &middot; Preserve all factual information &mdash; do NOT invent experience &middot; Output: structured JSON matching master_cv.json schema</div>
+                    </div>
+                    <span class="task-status ts-pending">Pending</span>
+                  </div>
+                  <div class="task">
+                    <div class="task-check"></div>
+                    <div class="task-content">
+                      <div class="task-text">Write <code>tailor.py</code> — self-scoring generation loop until ATS score &ge;85%</div>
+                      <div class="task-note">Loop max 5 iterations: 1) Extract keywords from JD &rarr; 2) Render cv_tailor.j2 with missing keywords &rarr; 3) Call AI &rarr; 4) Score result &rarr; 5) If &lt;85%, identify still-missing keywords, regenerate &rarr; After 5 tries, use best result. Store final ats_score in applications table.</div>
+                    </div>
+                    <span class="task-status ts-pending">Pending</span>
+                  </div>
+                  <div class="task">
+                    <div class="task-check"></div>
+                    <div class="task-content">
+                      <div class="task-text">Write <code>cover_letter.py</code> and Jinja2 template <code>cover_letter.j2</code></div>
+                      <div class="task-note">Template inputs: master_cv_json, job_description, company_name, role_title, matched_skills &middot; Output: 3-paragraph professional cover letter. Para 1: why this specific company + role. Para 2: relevant experience matching JD. Para 3: call to action. No generic templates.</div>
+                    </div>
+                    <span class="task-status ts-pending">Pending</span>
+                  </div>
+                  <div class="task">
+                    <div class="task-check"></div>
+                    <div class="task-content">
+                      <div class="task-text">Write <code>pdf_generator.py</code> — ATS-safe PDF using ReportLab</div>
+                      <div class="task-note">Rules: single-column layout (no tables for layout), Helvetica or Arial font only (ATS-safe), no images or logos, no text boxes, bullet points as plain hyphens or en-dashes, standard section headers (Experience, Skills, Education), all text selectable. Output to <code>storage/applications/{job_id}/cv.pdf</code></div>
+                    </div>
+                    <span class="task-status ts-pending">Pending</span>
+                  </div>
+                  <div class="task">
+                    <div class="task-check"></div>
+                    <div class="task-content">
+                      <div class="task-text">Write <code>docx_generator.py</code> — Word format using python-docx</div>
+                      <div class="task-note">Use built-in Word styles (Heading 1, Heading 2, List Bullet) &middot; No custom fonts (use Calibri which is ATS-safe) &middot; Set document metadata: author, title &middot; Output to <code>storage/applications/{job_id}/cv.docx</code></div>
+                    </div>
+                    <span class="task-status ts-pending">Pending</span>
+                  </div>
+                  <div class="task">
+                    <div class="task-check"></div>
+                    <div class="task-content">
+                      <div class="task-text">Integration test: generate CV for 3 real jobs, manually verify ATS score &ge;85%, open PDF + DOCX and visually inspect</div>
+                      <div class="task-note">Use a free ATS checker (Jobscan, Resume Worded free tier) to validate the PDF is actually ATS-readable. Adjust pdf_generator if any formatting causes parse failures.</div>
+                    </div>
+                    <span class="task-status ts-pending">Pending</span>
+                  </div>
+                </div>
+              </div>
+              <div class="phase-sidebar">
+                <div class="info-card">
+                  <div class="ic-head">Files Created</div>
+                  <div class="ic-body">
+                    <div class="file-item"><span class="file-dot">&#9679;</span><span class="file-name">app/cv_engine/keyword_extractor.py</span></div>
+                    <div class="file-item"><span class="file-dot">&#9679;</span><span class="file-name">app/cv_engine/ats_scorer.py</span></div>
+                    <div class="file-item"><span class="file-dot">&#9679;</span><span class="file-name">app/cv_engine/tailor.py</span></div>
+                    <div class="file-item"><span class="file-dot">&#9679;</span><span class="file-name">app/cv_engine/cover_letter.py</span></div>
+                    <div class="file-item"><span class="file-dot">&#9679;</span><span class="file-name">app/cv_engine/pdf_generator.py</span></div>
+                    <div class="file-item"><span class="file-dot">&#9679;</span><span class="file-name">app/cv_engine/docx_generator.py</span></div>
+                    <div class="file-item"><span class="file-dot">&#9679;</span><span class="file-name">app/ai/prompts/cv_tailor.j2</span></div>
+                    <div class="file-item"><span class="file-dot">&#9679;</span><span class="file-name">app/ai/prompts/cover_letter.j2</span></div>
+                  </div>
+                </div>
+                <div class="info-card">
+                  <div class="ic-head">Dependencies</div>
+                  <div class="ic-body">
+                    <div class="dep-item"><span class="dep-num">Phase 1</span> master_cv.json</div>
+                    <div class="dep-item"><span class="dep-num">Phase 3</span> AIClient + scoring</div>
+                  </div>
+                </div>
+                <div class="info-card">
+                  <div class="ic-head">ATS Rules</div>
+                  <div class="ic-body">
+                    <div class="note-text"><strong>Verbatim keywords only.</strong> If the JD says &ldquo;Apache Airflow&rdquo; the CV must say &ldquo;Apache Airflow&rdquo; &mdash; not &ldquo;Airflow&rdquo; alone. ATS systems match exact strings.</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </details>
+      </div>
+
+      <!-- ════════════ PHASE 5 ════════════ -->
+      <div class="phase phase-5" id="phase-5">
+        <details>
+          <summary>
+            <div class="phase-header">
+              <div class="phase-num">5</div>
+              <div class="phase-info">
+                <div class="phase-name">Application Submission</div>
+                <div class="phase-tagline">Gmail API &middot; Playwright form automation &middot; Rate limiting &middot; Reply detection</div>
+              </div>
+              <div class="phase-meta">
+                <span class="phase-pill pill-pending">Not Started</span>
+                <span class="phase-task-count">6 tasks</span>
+                <span class="chevron">&#9658;</span>
+              </div>
+            </div>
+          </summary>
+          <div class="phase-body">
+            <p class="phase-goal"><strong>Goal:</strong> The system can deliver a job application two ways &mdash; email (CV attached, professional body) and web form (Playwright fills and submits, screenshots each step). Max 15 applications per day. Every submission is recorded in SQLite with a timestamp. Gmail replies are scanned every 6 hours to detect interview invites.</p>
+            <div class="phase-sections">
+              <div>
+                <div class="tasks-label">Tasks</div>
+                <div class="task-list">
+                  <div class="task">
+                    <div class="task-check"></div>
+                    <div class="task-content">
+                      <div class="task-text">Gmail OAuth2 setup: create Google Cloud project, enable Gmail API, run OAuth flow, store <code>token.json</code></div>
+                      <div class="task-note">Go to console.cloud.google.com &rarr; New project &rarr; Enable Gmail API &rarr; Create OAuth2 credentials (Desktop app) &rarr; Download credentials.json &rarr; Run one-time auth flow on your local machine &rarr; Copy token.json to VPS. Token auto-refreshes after that.</div>
+                    </div>
+                    <span class="task-status ts-pending">Pending</span>
+                  </div>
+                  <div class="task">
+                    <div class="task-check"></div>
+                    <div class="task-content">
+                      <div class="task-text">Write <code>email_sender.py</code> — EmailSender class with send and reply detection</div>
+                      <div class="task-note">Methods: <code>send_application(to, subject, cv_path, cover_letter_text)</code> &middot; <code>detect_replies()</code> scans inbox for threads where you sent the original &mdash; if reply found, returns job_id + reply text &middot; Use proper MIME formatting, professional From name, plain text + HTML multipart body</div>
+                    </div>
+                    <span class="task-status ts-pending">Pending</span>
+                  </div>
+                  <div class="task">
+                    <div class="task-check"></div>
+                    <div class="task-content">
+                      <div class="task-text">Write <code>form_filler.py</code> — Playwright form automation</div>
+                      <div class="task-note">Class <code>FormFiller</code> method <code>submit(apply_url, cv_path, cover_letter_path, personal_info)</code> &middot; Navigate to apply_url &middot; Detect common field patterns: name, email, phone, CV upload, cover letter upload &middot; Fill intelligently &middot; Screenshot before submit &middot; Click submit &middot; Screenshot confirmation page &middot; Return success/fail + all screenshot paths</div>
+                    </div>
+                    <span class="task-status ts-pending">Pending</span>
+                  </div>
+                  <div class="task">
+                    <div class="task-check"></div>
+                    <div class="task-content">
+                      <div class="task-text">Write <code>rate_limiter.py</code> — enforce daily cap and per-source limits</div>
+                      <div class="task-note">Check SQLite: how many applications submitted today? &middot; If &ge;15, skip and log &middot; Per-source limits: max 3 from LinkedIn per day &middot; Include exponential backoff between submissions (30-90s random delay)</div>
+                    </div>
+                    <span class="task-status ts-pending">Pending</span>
+                  </div>
+                  <div class="task">
+                    <div class="task-check"></div>
+                    <div class="task-content">
+                      <div class="task-text">Write application submission coordinator that routes email vs form jobs</div>
+                      <div class="task-note">Get qualified jobs (skill &ge;65, hire &ge;60, not yet applied) &middot; Check rate limit &middot; Route: apply_method=&ldquo;email&rdquo; &rarr; EmailSender, apply_method=&ldquo;form&rdquo; &rarr; FormFiller &middot; Record result in applications table &middot; Handle failures: mark as &ldquo;needs_manual&rdquo; and send Telegram alert</div>
+                    </div>
+                    <span class="task-status ts-pending">Pending</span>
+                  </div>
+                  <div class="task">
+                    <div class="task-check"></div>
+                    <div class="task-content">
+                      <div class="task-text">Integration test: send one test application to yourself, verify email arrives, verify SQLite records it</div>
+                      <div class="task-note">Also test reply detection: reply to the test email yourself, run detect_replies(), confirm SQLite status updates to &ldquo;replied&rdquo;</div>
+                    </div>
+                    <span class="task-status ts-pending">Pending</span>
+                  </div>
+                </div>
+              </div>
+              <div class="phase-sidebar">
+                <div class="info-card">
+                  <div class="ic-head">Files Created</div>
+                  <div class="ic-body">
+                    <div class="file-item"><span class="file-dot">&#9679;</span><span class="file-name">app/submission/email_sender.py</span></div>
+                    <div class="file-item"><span class="file-dot">&#9679;</span><span class="file-name">app/submission/form_filler.py</span></div>
+                    <div class="file-item"><span class="file-dot">&#9679;</span><span class="file-name">app/submission/rate_limiter.py</span></div>
+                  </div>
+                </div>
+                <div class="info-card">
+                  <div class="ic-head">Dependencies</div>
+                  <div class="ic-body">
+                    <div class="dep-item"><span class="dep-num">Phase 4</span> CV + cover letter files</div>
+                    <div class="dep-item"><span class="dep-num">Phase 1</span> applications table</div>
+                  </div>
+                </div>
+                <div class="info-card">
+                  <div class="ic-head">Safety Limits</div>
+                  <div class="ic-body">
+                    <div class="note-text">Max <strong>15 applications/day</strong> total. Max <strong>3 from LinkedIn</strong> per day. Random 30&ndash;90s delay between submissions to avoid triggering anti-bot detection.</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </details>
+      </div>
+
+      <!-- ════════════ PHASE 6 ════════════ -->
+      <div class="phase phase-6" id="phase-6">
+        <details>
+          <summary>
+            <div class="phase-header">
+              <div class="phase-num">6</div>
+              <div class="phase-info">
+                <div class="phase-name">Scheduler &amp; Pipeline Wiring</div>
+                <div class="phase-tagline">APScheduler &middot; Entry point &middot; Full end-to-end pipeline dry run</div>
+              </div>
+              <div class="phase-meta">
+                <span class="phase-pill pill-pending">Not Started</span>
+                <span class="phase-task-count">5 tasks</span>
+                <span class="chevron">&#9658;</span>
+              </div>
+            </div>
+          </summary>
+          <div class="phase-body">
+            <p class="phase-goal"><strong>Goal:</strong> All the pieces built in Phases 1&ndash;5 are wired together into one automated daily pipeline. APScheduler handles the cron timing. A single <code>python main.py</code> command starts the engine and keeps it running. A dry-run mode lets you test the full pipeline without actually submitting applications.</p>
+            <div class="phase-sections">
+              <div>
+                <div class="tasks-label">Tasks</div>
+                <div class="task-list">
+                  <div class="task">
+                    <div class="task-check"></div>
+                    <div class="task-content">
+                      <div class="task-text">Write <code>app/scheduler.py</code> with APScheduler and all cron jobs</div>
+                      <div class="task-note">
+                        Cron schedule (all times EAT = UTC+3):<br/>
+                        07:00 &rarr; run all 8 scrapers<br/>
+                        08:00 &rarr; score all new jobs (skill + hire)<br/>
+                        09:00 &rarr; generate CVs for qualifying jobs<br/>
+                        09:30 &rarr; submit applications (respect rate limit)<br/>
+                        Every 6h &rarr; check for follow-up due dates &rarr; fire n8n webhook<br/>
+                        Every 6h &rarr; detect Gmail replies &rarr; update SQLite status<br/>
+                        00:00 &rarr; send daily digest (email + Telegram)
+                      </div>
+                    </div>
+                    <span class="task-status ts-pending">Pending</span>
+                  </div>
+                  <div class="task">
+                    <div class="task-check"></div>
+                    <div class="task-content">
+                      <div class="task-text">Write <code>app/main.py</code> — entry point that initializes config, database, and starts the scheduler</div>
+                      <div class="task-note">Validate all config on startup (fail fast with clear message if any required key missing) &middot; Create SQLite tables if they don't exist &middot; Start APScheduler &middot; Keep process alive with <code>scheduler.start()</code> blocking call</div>
+                    </div>
+                    <span class="task-status ts-pending">Pending</span>
+                  </div>
+                  <div class="task">
+                    <div class="task-check"></div>
+                    <div class="task-content">
+                      <div class="task-text">Add error handling and logging throughout the pipeline</div>
+                      <div class="task-note">Each scheduled job runs inside a try/except &middot; Exceptions are logged to <code>/data/logs/engine.log</code> with timestamp + traceback &middot; Critical failures (AI all down, Gmail broken, SQLite corrupt) send a Telegram alert immediately</div>
+                    </div>
+                    <span class="task-status ts-pending">Pending</span>
+                  </div>
+                  <div class="task">
+                    <div class="task-check"></div>
+                    <div class="task-content">
+                      <div class="task-text">Add <code>DRY_RUN=true</code> mode that skips actual submission</div>
+                      <div class="task-note">When DRY_RUN=true in .env: scrapers run normally, scoring runs normally, CV generation runs normally, but submission step logs "DRY RUN: would have submitted to [company]" instead of sending. Use this for first end-to-end test.</div>
+                    </div>
+                    <span class="task-status ts-pending">Pending</span>
+                  </div>
+                  <div class="task">
+                    <div class="task-check"></div>
+                    <div class="task-content">
+                      <div class="task-text">Full end-to-end dry run: confirm entire pipeline executes from scrape to CV generation without errors</div>
+                      <div class="task-note">Check: jobs scraped &rarr; scored &rarr; qualifying jobs identified &rarr; CVs generated in storage/ &rarr; rate limiter checked &rarr; submission skipped (dry run) &rarr; applications table shows pending records</div>
+                    </div>
+                    <span class="task-status ts-pending">Pending</span>
+                  </div>
+                </div>
+              </div>
+              <div class="phase-sidebar">
+                <div class="info-card">
+                  <div class="ic-head">Files Created</div>
+                  <div class="ic-body">
+                    <div class="file-item"><span class="file-dot">&#9679;</span><span class="file-name">app/scheduler.py</span></div>
+                    <div class="file-item"><span class="file-dot">&#9679;</span><span class="file-name">app/main.py</span></div>
+                  </div>
+                </div>
+                <div class="info-card">
+                  <div class="ic-head">Dependencies</div>
+                  <div class="ic-body">
+                    <div class="dep-item"><span class="dep-num">Phase 1&ndash;5</span> All previous phases</div>
+                  </div>
+                </div>
+                <div class="info-card">
+                  <div class="ic-head">Done When</div>
+                  <div class="ic-body">
+                    <div class="note-text"><code>DRY_RUN=true docker compose up job-engine</code> runs the full pipeline without errors and generates real CV files in <code>storage/</code>.</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </details>
+      </div>
+
+      <!-- ════════════ PHASE 7 ════════════ -->
+      <div class="phase phase-7" id="phase-7">
+        <details>
+          <summary>
+            <div class="phase-header">
+              <div class="phase-num">7</div>
+              <div class="phase-info">
+                <div class="phase-name">FastAPI Dashboard</div>
+                <div class="phase-tagline">Login page &middot; Pipeline view &middot; Job feed &middot; Stats &middot; REST API for n8n</div>
+              </div>
+              <div class="phase-meta">
+                <span class="phase-pill pill-pending">Not Started</span>
+                <span class="phase-task-count">9 tasks</span>
+                <span class="chevron">&#9658;</span>
+              </div>
+            </div>
+          </summary>
+          <div class="phase-body">
+            <p class="phase-goal"><strong>Goal:</strong> A private web dashboard you can log into from any browser. Shows all applications and their status, today's scored job feed, analytics, and a form to log new projects (which updates your master CV). Also exposes REST endpoints for n8n to call back with status updates.</p>
+            <div class="phase-sections">
+              <div>
+                <div class="tasks-label">Tasks</div>
+                <div class="task-list">
+                  <div class="task">
+                    <div class="task-check"></div>
+                    <div class="task-content">
+                      <div class="task-text">Write <code>dashboard/auth.py</code> — session cookie login using itsdangerous</div>
+                      <div class="task-note">Single password from .env (DASHBOARD_PASSWORD) &middot; On correct password: create signed session cookie (itsdangerous TimestampSigner, 7-day expiry) &middot; Dependency function <code>require_login(request)</code> &mdash; redirect to /login if no valid cookie</div>
+                    </div>
+                    <span class="task-status ts-pending">Pending</span>
+                  </div>
+                  <div class="task">
+                    <div class="task-check"></div>
+                    <div class="task-content">
+                      <div class="task-text">Write <code>dashboard/main.py</code> — FastAPI app, mount routers, static files, session middleware</div>
+                    </div>
+                    <span class="task-status ts-pending">Pending</span>
+                  </div>
+                  <div class="task">
+                    <div class="task-check"></div>
+                    <div class="task-content">
+                      <div class="task-text">Write <code>routes/pipeline.py</code> — <code>/pipeline</code> page: full applications table</div>
+                      <div class="task-note">Show all applications &middot; Columns: job title, company, source, applied date, status, ATS score, CV link, follow-up dates &middot; Color-coded status badges &middot; Sortable by date and status</div>
+                    </div>
+                    <span class="task-status ts-pending">Pending</span>
+                  </div>
+                  <div class="task">
+                    <div class="task-check"></div>
+                    <div class="task-content">
+                      <div class="task-text">Write <code>routes/feed.py</code> — <code>/feed</code> page: today&rsquo;s scored jobs</div>
+                      <div class="task-note">Show all jobs scraped today &middot; Filter controls: min skill score, min hire score, apply method, source &middot; Each job card shows: title, company, location, scores, apply method &middot; Button to manually trigger application for a specific job</div>
+                    </div>
+                    <span class="task-status ts-pending">Pending</span>
+                  </div>
+                  <div class="task">
+                    <div class="task-check"></div>
+                    <div class="task-content">
+                      <div class="task-text">Write <code>routes/projects.py</code> — <code>/projects</code> page: log new work and projects</div>
+                      <div class="task-note">Form: project name, description, tech stack (multi-select), role type, outcome, date range &middot; On submit: update master_cv.json projects[] array &middot; Show confirmation with next steps (CV will be rebuilt on next qualifying application)</div>
+                    </div>
+                    <span class="task-status ts-pending">Pending</span>
+                  </div>
+                  <div class="task">
+                    <div class="task-check"></div>
+                    <div class="task-content">
+                      <div class="task-text">Write <code>routes/stats.py</code> — <code>/stats</code> page: pipeline analytics</div>
+                      <div class="task-note">Show: total applications by week (CSS bar chart), response rate % by source, status distribution (Applied / Replied / Interview / Rejected / Ghosted), average ATS score per source, top missing skills (what keywords keep appearing in jobs you fail to score highly on)</div>
+                    </div>
+                    <span class="task-status ts-pending">Pending</span>
+                  </div>
+                  <div class="task">
+                    <div class="task-check"></div>
+                    <div class="task-content">
+                      <div class="task-text">Write <code>routes/api.py</code> — REST endpoints for n8n callbacks</div>
+                      <div class="task-note">POST <code>/api/status</code> &mdash; n8n updates application status (e.g., interview confirmed) &middot; POST <code>/api/trigger-rebuild</code> &mdash; n8n triggers CV regeneration for a job_id &middot; Secured with a shared API token in .env</div>
+                    </div>
+                    <span class="task-status ts-pending">Pending</span>
+                  </div>
+                  <div class="task">
+                    <div class="task-check"></div>
+                    <div class="task-content">
+                      <div class="task-text">Write all Jinja2 templates: base.html, login.html, pipeline.html, feed.html, projects.html, stats.html</div>
+                      <div class="task-note">Use the same warm cream design language as the architecture doc &middot; System fonts only &middot; Mobile-friendly &middot; base.html has navigation bar with links to all sections + current status indicator</div>
+                    </div>
+                    <span class="task-status ts-pending">Pending</span>
+                  </div>
+                  <div class="task">
+                    <div class="task-check"></div>
+                    <div class="task-content">
+                      <div class="task-text">Integration test: run dashboard container, log in, navigate all pages with real SQLite data</div>
+                    </div>
+                    <span class="task-status ts-pending">Pending</span>
+                  </div>
+                </div>
+              </div>
+              <div class="phase-sidebar">
+                <div class="info-card">
+                  <div class="ic-head">Files Created</div>
+                  <div class="ic-body">
+                    <div class="file-item"><span class="file-dot">&#9679;</span><span class="file-name">dashboard/main.py</span></div>
+                    <div class="file-item"><span class="file-dot">&#9679;</span><span class="file-name">dashboard/auth.py</span></div>
+                    <div class="file-item"><span class="file-dot">&#9679;</span><span class="file-name">dashboard/routes/pipeline.py</span></div>
+                    <div class="file-item"><span class="file-dot">&#9679;</span><span class="file-name">dashboard/routes/feed.py</span></div>
+                    <div class="file-item"><span class="file-dot">&#9679;</span><span class="file-name">dashboard/routes/projects.py</span></div>
+                    <div class="file-item"><span class="file-dot">&#9679;</span><span class="file-name">dashboard/routes/stats.py</span></div>
+                    <div class="file-item"><span class="file-dot">&#9679;</span><span class="file-name">dashboard/routes/api.py</span></div>
+                    <div class="file-item"><span class="file-dot">&#9679;</span><span class="file-name">dashboard/templates/*.html (6 files)</span></div>
+                  </div>
+                </div>
+                <div class="info-card">
+                  <div class="ic-head">Dependencies</div>
+                  <div class="ic-body">
+                    <div class="dep-item"><span class="dep-num">Phase 1</span> SQLite with data</div>
+                    <div class="dep-item"><span class="dep-num">Phase 6</span> Pipeline generating records</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </details>
+      </div>
+
+      <!-- ════════════ PHASE 8 ════════════ -->
+      <div class="phase phase-8" id="phase-8">
+        <details>
+          <summary>
+            <div class="phase-header">
+              <div class="phase-num">8</div>
+              <div class="phase-info">
+                <div class="phase-name">n8n Automation Workflows</div>
+                <div class="phase-tagline">Follow-up emails &middot; Ghosted detection &middot; Telegram alerts &middot; CV rebuild trigger</div>
+              </div>
+              <div class="phase-meta">
+                <span class="phase-pill pill-pending">Not Started</span>
+                <span class="phase-task-count">6 tasks</span>
+                <span class="chevron">&#9658;</span>
+              </div>
+            </div>
+          </summary>
+          <div class="phase-body">
+            <p class="phase-goal"><strong>Goal:</strong> n8n handles all time-sensitive communications and alerts. It never polls — it only acts when Python fires a webhook at it. Key workflows: follow-up emails at Day&nbsp;21 and Day&nbsp;30, ghosted detection at Day&nbsp;45, instant Telegram alerts for interview invites, and a CV rebuild trigger when you log new projects.</p>
+            <div class="phase-sections">
+              <div>
+                <div class="tasks-label">Tasks</div>
+                <div class="task-list">
+                  <div class="task">
+                    <div class="task-check"></div>
+                    <div class="task-content">
+                      <div class="task-text">n8n initial setup: access UI, set admin credentials, configure base URL and webhook URL</div>
+                      <div class="task-note">Access at http://localhost:5678 via SSH tunnel initially &middot; Set N8N_HOST and N8N_PROTOCOL in .env &middot; After Nginx is set up in Phase 9, switch to HTTPS domain URL</div>
+                    </div>
+                    <span class="task-status ts-pending">Pending</span>
+                  </div>
+                  <div class="task">
+                    <div class="task-check"></div>
+                    <div class="task-content">
+                      <div class="task-text">Build Day 21 follow-up email workflow</div>
+                      <div class="task-note">Trigger: Webhook node (Python calls this when 21 days elapsed &amp; status still &ldquo;applied&rdquo;) &rarr; Receive: job_id, company, role, contact_email, original_apply_date &rarr; Compose email: professional first follow-up, reference original application date, express continued interest &rarr; Gmail node: send email &rarr; HTTP node: call dashboard API to update status to &ldquo;follow_up_21_sent&rdquo;</div>
+                    </div>
+                    <span class="task-status ts-pending">Pending</span>
+                  </div>
+                  <div class="task">
+                    <div class="task-check"></div>
+                    <div class="task-content">
+                      <div class="task-text">Build Day 30 follow-up email workflow</div>
+                      <div class="task-note">Same structure as Day 21 but different email tone &mdash; more concise, acknowledge you followed up before, brief reiteration of fit. Update status to &ldquo;follow_up_30_sent&rdquo;</div>
+                    </div>
+                    <span class="task-status ts-pending">Pending</span>
+                  </div>
+                  <div class="task">
+                    <div class="task-check"></div>
+                    <div class="task-content">
+                      <div class="task-text">Build Day 45 ghosted detection workflow</div>
+                      <div class="task-note">Trigger: Webhook from Python (45 days elapsed, no reply, two follow-ups sent) &rarr; Update status to &ldquo;ghosted&rdquo; via dashboard API &rarr; Send Telegram alert: &ldquo;Marked [Company] as ghosted after 45 days and 2 follow-ups&rdquo;</div>
+                    </div>
+                    <span class="task-status ts-pending">Pending</span>
+                  </div>
+                  <div class="task">
+                    <div class="task-check"></div>
+                    <div class="task-content">
+                      <div class="task-text">Build interview invite alert workflow</div>
+                      <div class="task-note">Trigger: Webhook from Python (Gmail reply contains &ldquo;interview&rdquo; / &ldquo;schedule&rdquo; / &ldquo;call&rdquo; keywords) &rarr; Telegram node: immediate message with company name, role, snippet of their reply text &mdash; so you see it the moment Python detects it</div>
+                    </div>
+                    <span class="task-status ts-pending">Pending</span>
+                  </div>
+                  <div class="task">
+                    <div class="task-check"></div>
+                    <div class="task-content">
+                      <div class="task-text">Export all n8n workflows as JSON for version control</div>
+                      <div class="task-note">In n8n UI: Settings &rarr; Export &rarr; save each workflow JSON to <code>n8n_workflows/</code> directory. Commit to git. This lets you restore workflows if n8n data is lost.</div>
+                    </div>
+                    <span class="task-status ts-pending">Pending</span>
+                  </div>
+                </div>
+              </div>
+              <div class="phase-sidebar">
+                <div class="info-card">
+                  <div class="ic-head">Files Created</div>
+                  <div class="ic-body">
+                    <div class="file-item"><span class="file-dot">&#9679;</span><span class="file-name">n8n_workflows/followup_day21.json</span></div>
+                    <div class="file-item"><span class="file-dot">&#9679;</span><span class="file-name">n8n_workflows/followup_day30.json</span></div>
+                    <div class="file-item"><span class="file-dot">&#9679;</span><span class="file-name">n8n_workflows/ghosted_day45.json</span></div>
+                    <div class="file-item"><span class="file-dot">&#9679;</span><span class="file-name">n8n_workflows/interview_alert.json</span></div>
+                  </div>
+                </div>
+                <div class="info-card">
+                  <div class="ic-head">Dependencies</div>
+                  <div class="ic-body">
+                    <div class="dep-item"><span class="dep-num">Phase 5</span> Gmail API credentials</div>
+                    <div class="dep-item"><span class="dep-num">Phase 7</span> Dashboard API endpoints</div>
+                  </div>
+                </div>
+                <div class="info-card">
+                  <div class="ic-head">Follow-Up Timing</div>
+                  <div class="ic-body">
+                    <div class="note-text">Day <strong>21</strong>: first follow-up &middot; Day <strong>30</strong>: second follow-up &middot; Day <strong>45</strong>: mark ghosted. These are professional norms &mdash; don&rsquo;t change them.</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </details>
+      </div>
+
+      <!-- ════════════ PHASE 9 ════════════ -->
+      <div class="phase phase-9" id="phase-9">
+        <details>
+          <summary>
+            <div class="phase-header">
+              <div class="phase-num">9</div>
+              <div class="phase-info">
+                <div class="phase-name">Nginx + HTTPS + Domain</div>
+                <div class="phase-tagline">Reverse proxy &middot; Let&rsquo;s Encrypt free certificates &middot; Public access</div>
+              </div>
+              <div class="phase-meta">
+                <span class="phase-pill pill-pending">Not Started</span>
+                <span class="phase-task-count">4 tasks</span>
+                <span class="chevron">&#9658;</span>
+              </div>
+            </div>
+          </summary>
+          <div class="phase-body">
+            <p class="phase-goal"><strong>Goal:</strong> The dashboard and n8n are accessible via HTTPS from any browser, with a proper domain name and a trusted Let&rsquo;s Encrypt certificate. Nginx sits in front of everything, routing traffic correctly. No service is directly exposed except through Nginx on ports 80 and 443.</p>
+            <div class="phase-sections">
+              <div>
+                <div class="tasks-label">Tasks</div>
+                <div class="task-list">
+                  <div class="task">
+                    <div class="task-check"></div>
+                    <div class="task-content">
+                      <div class="task-text">Get a domain name and point it to the Oracle Cloud VPS public IP</div>
+                      <div class="task-note">Free options: Freenom (.tk, .ml domains) or use a cheap .com from Namecheap &middot; In Oracle Cloud: find the public IP in the instance details &middot; Add an A record: yourdomain.com &rarr; VPS IP &middot; Wait for DNS propagation (up to 48h, usually &lt;1h)</div>
+                    </div>
+                    <span class="task-status ts-pending">Pending</span>
+                  </div>
+                  <div class="task">
+                    <div class="task-check"></div>
+                    <div class="task-content">
+                      <div class="task-text">Write final <code>nginx.conf</code> with upstream blocks and routing</div>
+                      <div class="task-note">Upstream: <code>dashboard</code> &rarr; 127.0.0.1:8000, <code>n8n</code> &rarr; 127.0.0.1:5678 &middot; Server block 80: redirect all HTTP to HTTPS &middot; Server block 443: SSL termination, proxy_pass to dashboard for /, proxy_pass to n8n for /n8n/ &middot; Set proper proxy headers (X-Real-IP, X-Forwarded-For)</div>
+                    </div>
+                    <span class="task-status ts-pending">Pending</span>
+                  </div>
+                  <div class="task">
+                    <div class="task-check"></div>
+                    <div class="task-content">
+                      <div class="task-text">Get Let&rsquo;s Encrypt SSL certificate using Certbot</div>
+                      <div class="task-note">Install certbot on VPS &middot; Run: <code>certbot --nginx -d yourdomain.com</code> &middot; Certbot auto-edits nginx.conf with SSL config &middot; Certificates auto-renew via cron/systemd timer &middot; Free, trusted by all browsers, 90-day auto-renewal</div>
+                    </div>
+                    <span class="task-status ts-pending">Pending</span>
+                  </div>
+                  <div class="task">
+                    <div class="task-check"></div>
+                    <div class="task-content">
+                      <div class="task-text">Test full HTTPS access: dashboard loads at https://yourdomain.com, n8n loads at https://yourdomain.com/n8n</div>
+                      <div class="task-note">Verify: HTTPS padlock in browser &middot; Login works on dashboard &middot; n8n UI loads &middot; No mixed content warnings &middot; Test from mobile too</div>
+                    </div>
+                    <span class="task-status ts-pending">Pending</span>
+                  </div>
+                </div>
+              </div>
+              <div class="phase-sidebar">
+                <div class="info-card">
+                  <div class="ic-head">Files Updated</div>
+                  <div class="ic-body">
+                    <div class="file-item"><span class="file-dot">&#9679;</span><span class="file-name">nginx.conf</span><span class="file-desc">(final version)</span></div>
+                  </div>
+                </div>
+                <div class="info-card">
+                  <div class="ic-head">Dependencies</div>
+                  <div class="ic-body">
+                    <div class="dep-item"><span class="dep-num">Phase 7</span> Dashboard running</div>
+                    <div class="dep-item"><span class="dep-num">Phase 8</span> n8n running</div>
+                  </div>
+                </div>
+                <div class="info-card">
+                  <div class="ic-head">Done When</div>
+                  <div class="ic-body">
+                    <div class="note-text">You can open your dashboard on your phone over mobile data (not on VPN or local network) and log in successfully over HTTPS.</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </details>
+      </div>
+
+      <!-- ════════════ PHASE 10 ════════════ -->
+      <div class="phase phase-10" id="phase-10">
+        <details>
+          <summary>
+            <div class="phase-header">
+              <div class="phase-num">10</div>
+              <div class="phase-info">
+                <div class="phase-name">Security Hardening &amp; Go-Live</div>
+                <div class="phase-tagline">Fail2ban &middot; Auto-updates &middot; First week monitoring &middot; Threshold tuning</div>
+              </div>
+              <div class="phase-meta">
+                <span class="phase-pill pill-pending">Not Started</span>
+                <span class="phase-task-count">7 tasks</span>
+                <span class="chevron">&#9658;</span>
+              </div>
+            </div>
+          </summary>
+          <div class="phase-body">
+            <p class="phase-goal"><strong>Goal:</strong> The system is hardened against the most realistic threats, automatic security patches are enabled, and the engine is running live. After one week of real submissions, review the data and tune scoring thresholds based on actual job quality.</p>
+            <div class="phase-sections">
+              <div>
+                <div class="tasks-label">Tasks</div>
+                <div class="task-list">
+                  <div class="task">
+                    <div class="task-check"></div>
+                    <div class="task-content">
+                      <div class="task-text">Install and configure Fail2ban to protect SSH and Nginx</div>
+                      <div class="task-note"><code>apt install fail2ban</code> &middot; Configure: ban IPs after 5 failed SSH attempts &middot; Ban IPs hitting Nginx 404s aggressively (scanner behavior) &middot; Ban time: 1 hour, increasing to 24h for repeat offenders</div>
+                    </div>
+                    <span class="task-status ts-pending">Pending</span>
+                  </div>
+                  <div class="task">
+                    <div class="task-check"></div>
+                    <div class="task-content">
+                      <div class="task-text">Enable unattended-upgrades for automatic security patches</div>
+                      <div class="task-note"><code>apt install unattended-upgrades</code> &middot; Configure to auto-install security updates only (not all updates) &middot; Reboot handled manually — don't auto-reboot</div>
+                    </div>
+                    <span class="task-status ts-pending">Pending</span>
+                  </div>
+                  <div class="task">
+                    <div class="task-check"></div>
+                    <div class="task-content">
+                      <div class="task-text">Write <code>scripts/backup.sh</code> — backup <code>data/</code> and <code>.env</code> weekly</div>
+                      <div class="task-note">Compress data/ to a timestamped tarball &middot; Store in /srv/backups/ (keep last 4 weeks) &middot; Add to crontab: run every Sunday 02:00</div>
+                    </div>
+                    <span class="task-status ts-pending">Pending</span>
+                  </div>
+                  <div class="task">
+                    <div class="task-check"></div>
+                    <div class="task-content">
+                      <div class="task-text">Final .env audit and API key verification</div>
+                      <div class="task-note">Test every API key: Gemini, Groq, SerpAPI, Gmail, Telegram &middot; Verify Gmail token is fresh &middot; Remove any test/dummy values &middot; Confirm DASHBOARD_SECRET_KEY is a random 32-char string (not a placeholder)</div>
+                    </div>
+                    <span class="task-status ts-pending">Pending</span>
+                  </div>
+                  <div class="task">
+                    <div class="task-check"></div>
+                    <div class="task-content">
+                      <div class="task-text">Turn off DRY_RUN mode and let the system run live for the first time</div>
+                      <div class="task-note">Set DRY_RUN=false in .env &middot; Monitor Telegram for the first application notifications &middot; Check your Gmail Sent for the actual sent applications &middot; Verify applications table has real records &middot; Watch for any error alerts in Telegram</div>
+                    </div>
+                    <span class="task-status ts-pending">Pending</span>
+                  </div>
+                  <div class="task">
+                    <div class="task-check"></div>
+                    <div class="task-content">
+                      <div class="task-text">First-week review: examine job quality and tune scoring thresholds</div>
+                      <div class="task-note">After 7 days: open the dashboard stats page &middot; Are the applied jobs actually good matches? &middot; If too many low-quality jobs getting through: raise skill threshold from 65 &rarr; 70 &middot; If too few jobs qualifying: check hire_score prompt is not being too harsh on remote roles</div>
+                    </div>
+                    <span class="task-status ts-pending">Pending</span>
+                  </div>
+                  <div class="task">
+                    <div class="task-check"></div>
+                    <div class="task-content">
+                      <div class="task-text">Write a <code>Makefile</code> with common maintenance commands</div>
+                      <div class="task-note">Targets: <code>make start</code> (docker compose up -d), <code>make stop</code>, <code>make logs</code> (tail all container logs), <code>make backup</code> (run backup.sh), <code>make status</code> (docker compose ps)</div>
+                    </div>
+                    <span class="task-status ts-pending">Pending</span>
+                  </div>
+                </div>
+              </div>
+              <div class="phase-sidebar">
+                <div class="info-card">
+                  <div class="ic-head">Files Created</div>
+                  <div class="ic-body">
+                    <div class="file-item"><span class="file-dot">&#9679;</span><span class="file-name">scripts/backup.sh</span></div>
+                    <div class="file-item"><span class="file-dot">&#9679;</span><span class="file-name">Makefile</span></div>
+                  </div>
+                </div>
+                <div class="info-card">
+                  <div class="ic-head">Dependencies</div>
+                  <div class="ic-body">
+                    <div class="dep-item"><span class="dep-num">Phase 9</span> All phases complete</div>
+                  </div>
+                </div>
+                <div class="info-card">
+                  <div class="ic-head">You Are Done When</div>
+                  <div class="ic-body">
+                    <div class="note-text">You wake up to Telegram messages telling you applications were submitted overnight. You do nothing. The system does it for you.</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </details>
+      </div>
+
+    </div><!-- /phases -->
+  </div><!-- /phases column -->
+</div><!-- /main-grid -->
+
+<!-- ══════════════════════════════════════════
+     REVISED BUILD ORDER
+══════════════════════════════════════════ -->
+<div style="background:var(--card);border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:48px 40px">
+  <div style="max-width:1100px;margin:0 auto">
+
+    <div style="font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;font-size:0.72rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--amber);margin-bottom:8px">Revised Build Order</div>
+    <h2 style="font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;font-size:1.6rem;font-weight:800;color:var(--navy);letter-spacing:-0.5px;margin-bottom:8px">Build on your laptop first &mdash; deploy to VPS last</h2>
+    <p style="color:var(--muted);font-style:italic;margin-bottom:36px;max-width:620px">VPS setup moved to the very end. Everything is built and tested locally. When the full system works end-to-end, then we deploy to the cloud. By that time the Oracle rate limit will have cleared, or we use an alternative.</p>
+
+    <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:0;align-items:stretch">
+
+      <!-- LEFT: Build on laptop -->
+      <div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden">
+        <div style="background:var(--navy);color:white;padding:12px 20px;font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;font-weight:700;font-size:0.82rem;letter-spacing:0.3px">
+          &#128187; Build on your laptop &mdash; Phases 1&ndash;10
+        </div>
+        <div style="padding:8px 0">
+
+          <div style="display:flex;align-items:center;gap:12px;padding:10px 20px;border-bottom:1px solid var(--border);background:var(--amber-light)">
+            <div style="width:28px;height:28px;border-radius:50%;background:var(--amber);color:white;display:flex;align-items:center;justify-content:center;font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;font-weight:800;font-size:0.75rem;flex-shrink:0">1</div>
+            <div>
+              <div style="font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;font-weight:700;font-size:0.85rem;color:var(--navy)">Database &amp; Master CV</div>
+              <div style="font-size:0.75rem;color:var(--amber);font-style:italic">&#9658; Start here</div>
+            </div>
+          </div>
+
+          <div style="display:flex;align-items:center;gap:12px;padding:10px 20px;border-bottom:1px solid var(--border)">
+            <div style="width:28px;height:28px;border-radius:50%;background:var(--border);color:var(--muted);display:flex;align-items:center;justify-content:center;font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;font-weight:800;font-size:0.75rem;flex-shrink:0">2</div>
+            <div>
+              <div style="font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;font-weight:700;font-size:0.85rem;color:var(--navy)">Job Board Scrapers</div>
+              <div style="font-size:0.75rem;color:var(--muted);font-style:italic">8 sources &middot; run + test locally</div>
+            </div>
+          </div>
+
+          <div style="display:flex;align-items:center;gap:12px;padding:10px 20px;border-bottom:1px solid var(--border)">
+            <div style="width:28px;height:28px;border-radius:50%;background:var(--border);color:var(--muted);display:flex;align-items:center;justify-content:center;font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;font-weight:800;font-size:0.75rem;flex-shrink:0">3</div>
+            <div>
+              <div style="font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;font-weight:700;font-size:0.85rem;color:var(--navy)">AI Client &amp; Scoring Engine</div>
+              <div style="font-size:0.75rem;color:var(--muted);font-style:italic">Gemini &rarr; Groq fallback &middot; test on real jobs</div>
+            </div>
+          </div>
+
+          <div style="display:flex;align-items:center;gap:12px;padding:10px 20px;border-bottom:1px solid var(--border)">
+            <div style="width:28px;height:28px;border-radius:50%;background:var(--border);color:var(--muted);display:flex;align-items:center;justify-content:center;font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;font-weight:800;font-size:0.75rem;flex-shrink:0">4</div>
+            <div>
+              <div style="font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;font-weight:700;font-size:0.85rem;color:var(--navy)">CV Generation Engine</div>
+              <div style="font-size:0.75rem;color:var(--muted);font-style:italic">ATS loop &middot; PDF + DOCX output</div>
+            </div>
+          </div>
+
+          <div style="display:flex;align-items:center;gap:12px;padding:10px 20px;border-bottom:1px solid var(--border)">
+            <div style="width:28px;height:28px;border-radius:50%;background:var(--border);color:var(--muted);display:flex;align-items:center;justify-content:center;font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;font-weight:800;font-size:0.75rem;flex-shrink:0">5</div>
+            <div>
+              <div style="font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;font-weight:700;font-size:0.85rem;color:var(--navy)">Application Submission</div>
+              <div style="font-size:0.75rem;color:var(--muted);font-style:italic">Gmail API &middot; Playwright forms</div>
+            </div>
+          </div>
+
+          <div style="display:flex;align-items:center;gap:12px;padding:10px 20px;border-bottom:1px solid var(--border)">
+            <div style="width:28px;height:28px;border-radius:50%;background:var(--border);color:var(--muted);display:flex;align-items:center;justify-content:center;font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;font-weight:800;font-size:0.75rem;flex-shrink:0">6</div>
+            <div>
+              <div style="font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;font-weight:700;font-size:0.85rem;color:var(--navy)">Scheduler &amp; Pipeline Wiring</div>
+              <div style="font-size:0.75rem;color:var(--muted);font-style:italic">APScheduler &middot; full dry-run test</div>
+            </div>
+          </div>
+
+          <div style="display:flex;align-items:center;gap:12px;padding:10px 20px;border-bottom:1px solid var(--border)">
+            <div style="width:28px;height:28px;border-radius:50%;background:var(--border);color:var(--muted);display:flex;align-items:center;justify-content:center;font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;font-weight:800;font-size:0.75rem;flex-shrink:0">7</div>
+            <div>
+              <div style="font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;font-weight:700;font-size:0.85rem;color:var(--navy)">FastAPI Dashboard</div>
+              <div style="font-size:0.75rem;color:var(--muted);font-style:italic">Login &middot; pipeline view &middot; stats</div>
+            </div>
+          </div>
+
+          <div style="display:flex;align-items:center;gap:12px;padding:10px 20px;border-bottom:1px solid var(--border)">
+            <div style="width:28px;height:28px;border-radius:50%;background:var(--border);color:var(--muted);display:flex;align-items:center;justify-content:center;font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;font-weight:800;font-size:0.75rem;flex-shrink:0">8</div>
+            <div>
+              <div style="font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;font-weight:700;font-size:0.85rem;color:var(--navy)">n8n Workflows</div>
+              <div style="font-size:0.75rem;color:var(--muted);font-style:italic">Follow-ups &middot; alerts &middot; test locally</div>
+            </div>
+          </div>
+
+          <div style="display:flex;align-items:center;gap:12px;padding:10px 20px">
+            <div style="width:28px;height:28px;border-radius:50%;background:var(--border);color:var(--muted);display:flex;align-items:center;justify-content:center;font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;font-weight:800;font-size:0.75rem;flex-shrink:0">9</div>
+            <div>
+              <div style="font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;font-weight:700;font-size:0.85rem;color:var(--navy)">Full end-to-end test on laptop</div>
+              <div style="font-size:0.75rem;color:var(--muted);font-style:italic">Everything working? &rarr; ready to deploy</div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ARROW -->
+      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 28px;gap:8px">
+        <div style="font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;font-size:0.68rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;writing-mode:vertical-rl;text-orientation:mixed;transform:rotate(180deg)">All working locally</div>
+        <div style="font-size:2rem;color:var(--amber);font-weight:800">&rarr;</div>
+        <div style="width:1px;height:60px;background:var(--border)"></div>
+        <div style="font-size:2rem;color:var(--amber);font-weight:800">&rarr;</div>
+      </div>
+
+      <!-- RIGHT: Deploy to VPS -->
+      <div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden">
+        <div style="background:var(--teal);color:white;padding:12px 20px;font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;font-weight:700;font-size:0.82rem;letter-spacing:0.3px">
+          &#9729; Deploy to VPS &mdash; Phases 0 + 10
+        </div>
+        <div style="padding:8px 0">
+
+          <div style="display:flex;align-items:center;gap:12px;padding:10px 20px;border-bottom:1px solid var(--border)">
+            <div style="width:28px;height:28px;border-radius:50%;background:var(--teal);color:white;display:flex;align-items:center;justify-content:center;font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;font-weight:800;font-size:0.75rem;flex-shrink:0">0</div>
+            <div>
+              <div style="font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;font-weight:700;font-size:0.85rem;color:var(--navy)">VPS Setup</div>
+              <div style="font-size:0.75rem;color:var(--muted);font-style:italic">Oracle Cloud / Hetzner &middot; Docker &middot; .env</div>
+            </div>
+          </div>
+
+          <div style="display:flex;align-items:center;gap:12px;padding:10px 20px;border-bottom:1px solid var(--border)">
+            <div style="width:28px;height:28px;border-radius:50%;background:var(--border);color:var(--muted);display:flex;align-items:center;justify-content:center;font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;font-weight:800;font-size:0.75rem;flex-shrink:0">&#8593;</div>
+            <div>
+              <div style="font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;font-weight:700;font-size:0.85rem;color:var(--navy)">Push code to VPS</div>
+              <div style="font-size:0.75rem;color:var(--muted);font-style:italic">git clone or scp project files</div>
+            </div>
+          </div>
+
+          <div style="display:flex;align-items:center;gap:12px;padding:10px 20px;border-bottom:1px solid var(--border)">
+            <div style="width:28px;height:28px;border-radius:50%;background:var(--border);color:var(--muted);display:flex;align-items:center;justify-content:center;font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;font-weight:800;font-size:0.75rem;flex-shrink:0">&#8593;</div>
+            <div>
+              <div style="font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;font-weight:700;font-size:0.85rem;color:var(--navy)">docker compose up -d</div>
+              <div style="font-size:0.75rem;color:var(--muted);font-style:italic">All 5 services start on VPS</div>
+            </div>
+          </div>
+
+          <div style="display:flex;align-items:center;gap:12px;padding:10px 20px;border-bottom:1px solid var(--border)">
+            <div style="width:28px;height:28px;border-radius:50%;background:var(--border);color:var(--muted);display:flex;align-items:center;justify-content:center;font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;font-weight:800;font-size:0.75rem;flex-shrink:0">9</div>
+            <div>
+              <div style="font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;font-weight:700;font-size:0.85rem;color:var(--navy)">Nginx + HTTPS + Domain</div>
+              <div style="font-size:0.75rem;color:var(--muted);font-style:italic">Let's Encrypt &middot; public dashboard URL</div>
+            </div>
+          </div>
+
+          <div style="display:flex;align-items:center;gap:12px;padding:10px 20px">
+            <div style="width:28px;height:28px;border-radius:50%;background:var(--green-light);border:2px solid #86EFAC;color:var(--green);display:flex;align-items:center;justify-content:center;font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;font-weight:800;font-size:0.75rem;flex-shrink:0">10</div>
+            <div>
+              <div style="font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;font-weight:700;font-size:0.85rem;color:var(--navy)">Security &amp; Go-Live</div>
+              <div style="font-size:0.75rem;color:var(--muted);font-style:italic">DRY_RUN=false &middot; system runs autonomously</div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Note box -->
+        <div style="margin:0 16px 16px;background:var(--teal-light);border:1px solid #7EC9B4;border-radius:8px;padding:12px 14px">
+          <div style="font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;font-size:0.75rem;font-weight:700;color:var(--teal);margin-bottom:4px">VPS options (by then)</div>
+          <div style="font-size:0.77rem;color:var(--text);line-height:1.6">
+            Oracle Cloud rate limit clears in days &mdash; try again with a fresh email.<br/>
+            Hetzner CAX11: &euro;3.29/month (~KES&nbsp;480) &mdash; no sign-up issues, accepts Kenyan cards.
+          </div>
+        </div>
+
+      </div>
+    </div><!-- /grid -->
+  </div>
+</div>
+
+<!-- LEGEND -->
+<div class="legend">
+  <span class="legend-title">Status key</span>
+  <div class="legend-item"><span class="legend-dot" style="background:var(--border)"></span>Not Started</div>
+  <div class="legend-item"><span class="legend-dot" style="background:var(--amber)"></span>In Progress</div>
+  <div class="legend-item"><span class="legend-dot" style="background:var(--green)"></span>Done</div>
+  <div class="legend-item"><span class="legend-dot" style="background:var(--red)"></span>Blocked</div>
+  <span style="margin-left:auto;font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;font-size:0.75rem;color:var(--muted)">Update task statuses and progress bar as you work through each phase</span>
+</div>
+
+<footer>
+  <strong>Job Automation System</strong> &mdash; Implementation Plan v1.0 &middot; Engine 1 of 3<br/>
+  11 phases &nbsp;&middot;&nbsp; 69 tasks &nbsp;&middot;&nbsp; 41 files &nbsp;&middot;&nbsp; $0 infrastructure cost
+</footer>
+
+</body>
+</html>
