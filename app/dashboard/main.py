@@ -163,6 +163,77 @@ def api_unread_count():
     return JSONResponse({"unread": count_unread_notifications()})
 
 
+@app.get("/api/stats")
+def api_stats():
+    conn = get_connection()
+    total_jobs   = conn.execute("SELECT COUNT(*) as c FROM jobs").fetchone()["c"]
+    qualified    = conn.execute("SELECT COUNT(*) as c FROM jobs WHERE status='qualified'").fetchone()["c"]
+    needs_review = conn.execute("SELECT COUNT(*) as c FROM jobs WHERE status='needs_review'").fetchone()["c"]
+    total_applied = conn.execute("SELECT COUNT(*) as c FROM applications WHERE status='applied'").fetchone()["c"]
+    replied      = conn.execute("SELECT COUNT(*) as c FROM applications WHERE status='replied'").fetchone()["c"]
+    conn.close()
+    return {
+        "total_jobs": total_jobs,
+        "qualified": qualified,
+        "applied_today": count_applications_today(),
+        "max_per_day": settings.max_applications_per_day,
+        "total_applied": total_applied,
+        "needs_review": needs_review,
+        "replied": replied,
+        "dry_run": settings.dry_run,
+        "now": datetime.now().strftime("%Y-%m-%d %H:%M"),
+    }
+
+
+@app.get("/api/applications")
+def api_applications():
+    conn = get_connection()
+    rows = conn.execute("""
+        SELECT a.id, a.submitted_at, a.submission_method as apply_method,
+               a.status, a.ats_score,
+               j.title, j.company, j.apply_method as job_apply_method
+        FROM applications a JOIN jobs j ON j.id = a.job_id
+        ORDER BY a.submitted_at DESC LIMIT 10
+    """).fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+
+@app.get("/api/queue")
+def api_queue():
+    conn = get_connection()
+    rows = conn.execute("""
+        SELECT j.id, j.title, j.company, j.apply_url, j.skill_score, j.hire_score,
+               a.notes
+        FROM jobs j
+        LEFT JOIN applications a ON a.job_id = j.id AND a.status = 'needs_review'
+        WHERE j.status = 'needs_review'
+        ORDER BY j.skill_score DESC
+    """).fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+
+@app.get("/api/history")
+def api_history(status: str = "", method: str = ""):
+    conn = get_connection()
+    rows = conn.execute("""
+        SELECT a.id, a.submitted_at, a.submission_method as apply_method,
+               a.status, a.ats_score, a.cv_path, a.notes,
+               a.follow_up_21_at, a.follow_up_30_at,
+               j.title, j.company, j.skill_score
+        FROM applications a JOIN jobs j ON j.id = a.job_id
+        ORDER BY a.submitted_at DESC
+    """).fetchall()
+    conn.close()
+    apps = [dict(r) for r in rows]
+    if status:
+        apps = [a for a in apps if a["status"] == status]
+    if method:
+        apps = [a for a in apps if (a["apply_method"] or "").lower() == method.lower()]
+    return apps
+
+
 @app.post("/mark-applied/{job_id}")
 def mark_applied(job_id: int):
     """Mark a needs_review job as applied after manual submission."""
@@ -193,3 +264,18 @@ def run_now():
     t = threading.Thread(target=_run_all, daemon=True)
     t.start()
     return {"ok": True, "message": "Full pipeline triggered"}
+
+
+@app.post("/api/run-now")
+def api_run_now():
+    return run_now()
+
+
+@app.post("/api/apply/{job_id}")
+def api_re_trigger(job_id: int):
+    return re_trigger(job_id)
+
+
+@app.post("/api/mark-applied/{job_id}")
+def api_mark_applied(job_id: int):
+    return mark_applied(job_id)
