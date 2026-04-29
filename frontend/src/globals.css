@@ -18,6 +18,13 @@
     --destructive: 0 48% 51%;
     --destructive-foreground: 0 0% 100%;
     --radius: 0.5rem;
+    --radius-md: 0.375rem;
+    --secondary: 68 15% 20%;
+    --secondary-foreground: 46 20% 84%;
+    --accent: 60 39% 36%;
+    --accent-foreground: 0 0% 100%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 68 15% 8%;
   }
 }
 
