@@ -279,3 +279,10 @@ def api_re_trigger(job_id: int):
 @app.post("/api/mark-applied/{job_id}")
 def api_mark_applied(job_id: int):
     return mark_applied(job_id)
+
+
+# Must be registered last — serves frontend/dist/ at "/" after all /api/* routes
+from fastapi.staticfiles import StaticFiles as _StaticFiles
+_dist = Path("frontend/dist")
+if _dist.exists():
+    app.mount("/", _StaticFiles(directory=_dist, html=True), name="frontend")
