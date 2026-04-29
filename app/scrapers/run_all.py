@@ -2,6 +2,20 @@
 from app.scrapers import remotive, weworkremotely, google_jobs
 
 
+def run_all_scrapers() -> int:
+    """Run all scrapers and return total new jobs found."""
+    results = {}
+    for mod in [remotive, weworkremotely, google_jobs]:
+        name = mod.__name__.split(".")[-1]
+        try:
+            new = mod.run()
+            results[name] = new
+        except Exception as e:
+            print(f"  [{name}] FAILED: {e}")
+            results[name] = 0
+    return sum(results.values())
+
+
 def main():
     print("=" * 55)
     print("  JOB SCRAPER — running all sources")

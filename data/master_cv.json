@@ -136,6 +136,34 @@
     }
   ],
 
+  "copycat_projects": [
+    {
+      "name": "SAP API + Credit Control System Integration",
+      "description": "Integrating SAP APIs with an internal Credit Control System to create a live, automated system serving both the OA and IT business units.",
+      "skills": ["SAP", "API integration", "enterprise systems", "system integration", "credit control"]
+    },
+    {
+      "name": "System Design Document — Enterprise Architecture",
+      "description": "Producing a comprehensive System Design Document (SDD) covering Application, Data, Integration, and Security Architecture for the Innovation Team Architecture Advisory Board.",
+      "skills": ["system design", "software architecture", "data architecture", "security architecture", "technical documentation"]
+    },
+    {
+      "name": "BRD & SDD — Business Requirements and System Design",
+      "description": "Authoring a Business Requirements Document (BRD) and System Design Document (SDD) to formalise project scope and technical specifications.",
+      "skills": ["business requirements", "system design", "stakeholder management", "technical writing", "solution architecture"]
+    },
+    {
+      "name": "MVP Product Tracker",
+      "description": "Defining a well-structured problem statement, building an MVP Tracker, and confirming project leads to drive a client-facing product initiative from conception to delivery.",
+      "skills": ["product management", "MVP development", "project coordination", "stakeholder communication", "data structure design"]
+    },
+    {
+      "name": "AI Tender Scraping Pipeline",
+      "description": "Designing an agent specification and building a prototype tender scraping pipeline using AI to automate discovery and processing of tender opportunities.",
+      "skills": ["AI agents", "web scraping", "Python", "automation", "prompt engineering", "pipeline design"]
+    }
+  ],
+
   "skills": {
     "languages": ["Python", "JavaScript", "SQL", "PHP", "Kotlin", "Bash", "HTML", "CSS"],
     "frameworks": ["React", "Node.js", "Django", "Flask"],

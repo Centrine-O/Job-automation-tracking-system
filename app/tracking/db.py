@@ -52,6 +52,14 @@ def init_db():
             ghosted_at          TEXT,
             notes               TEXT
         );
+
+        CREATE TABLE IF NOT EXISTS notifications (
+            id          INTEGER PRIMARY KEY AUTOINCREMENT,
+            title       TEXT NOT NULL,
+            body        TEXT NOT NULL,
+            read        INTEGER DEFAULT 0,
+            created_at  TEXT DEFAULT (datetime('now'))
+        );
     """)
 
     conn.commit()
@@ -193,3 +201,37 @@ def get_pipeline_stats():
     """).fetchall()
     conn.close()
     return {r["status"]: r["count"] for r in rows}
+
+
+# ── NOTIFICATIONS ───────────────────────────────────────
+
+def add_notification(title: str, body: str):
+    conn = get_connection()
+    conn.execute(
+        "INSERT INTO notifications (title, body) VALUES (?, ?)", (title, body)
+    )
+    conn.commit()
+    conn.close()
+
+
+def get_notifications(limit: int = 20) -> list[dict]:
+    conn = get_connection()
+    rows = conn.execute(
+        "SELECT * FROM notifications ORDER BY created_at DESC LIMIT ?", (limit,)
+    ).fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+
+def count_unread_notifications() -> int:
+    conn = get_connection()
+    row = conn.execute("SELECT COUNT(*) as c FROM notifications WHERE read=0").fetchone()
+    conn.close()
+    return row["c"]
+
+
+def mark_notifications_read():
+    conn = get_connection()
+    conn.execute("UPDATE notifications SET read=1")
+    conn.commit()
+    conn.close()

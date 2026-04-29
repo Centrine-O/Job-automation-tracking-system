@@ -81,6 +81,11 @@ def _parse_scores(text: str) -> tuple[int, int] | None:
         return None
 
 
+def score_all():
+    """Alias used by scheduler."""
+    return run()
+
+
 def run():
     """Score all unscored jobs in the DB."""
     if not CV_PATH.exists():

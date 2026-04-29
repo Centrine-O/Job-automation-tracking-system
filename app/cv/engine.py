@@ -24,17 +24,25 @@ Return the JSON array now:"""
 
 TAILOR_PROMPT = """You are an expert ATS-optimised CV writer. Tailor this candidate's CV for a specific job.
 
-Rules:
+CRITICAL RULES FOR THE PROFILE SUMMARY:
+- 3 sentences MAX. No exceptions.
+- Start with the role/title area, NOT the candidate's name
+- NEVER use these generic phrases: "proven", "expertise in", "track record", "passionate about", "results-driven", "dedicated", "leverage", "spearhead", "dynamic", "seeking to", "looking to", "strong foundation", "responsible for"
+- Write like a confident person talking in an interview — specific, real, direct
+- Reference ACTUAL things from the CV: real tools used, real companies, real types of work done
+- BAD example: "Proven AI engineer with expertise in automation and a track record of delivering results."
+- GOOD example: "Full Stack Developer and AI engineer with hands-on experience building agentic systems, LLM-powered pipelines, and automation tools — across both U.S. and Kenyan tech companies. I work across the full stack, from Python backends and REST APIs to React frontends, and have spent the last year deep in AI data work including model evaluation, prompt engineering, and dataset structuring. Currently building production systems at Copy Cat Group, including a live SAP API integration and an AI-powered tender scraping pipeline."
+- Naturally include the target keywords but do NOT keyword-stuff
+
+OTHER RULES:
 - Use ONLY skills and experience the candidate actually has
-- Naturally incorporate as many of the target keywords as possible (aim for 90%+ coverage)
-- Do NOT keyword-stuff — keywords must appear in natural sentences
-- Rewrite the profile summary to speak directly to this role
-- For experience bullets: rewrite/enhance to highlight relevant work using JD keywords
-- For skills: reorganise and highlight skills most relevant to the JD (keep all real skills, just reorder/regroup)
+- For experience bullets: use action verbs, keep concise (max 15 words each), include JD keywords naturally
+- For the Copy Cat Group role specifically: draw from the live projects listed below to write specific, credible bullets
+- Only include the top 4 most relevant roles in experience_bullets
 
 Return ONLY this JSON (no markdown, no explanation):
 {{
-  "profile_summary": "3-4 sentence summary targeting this role",
+  "profile_summary": "3-4 sentence summary in professional CV voice",
   "skills": {{
     "Languages": ["...", "..."],
     "Frameworks & Libraries": ["...", "..."],
@@ -45,12 +53,11 @@ Return ONLY this JSON (no markdown, no explanation):
     "DevOps & Cloud": ["...", "..."]
   }},
   "experience_bullets": {{
-    "role_key": ["bullet 1", "bullet 2", "bullet 3"]
+    "Full Stack Developer|Copy Cat Group": ["bullet 1", "bullet 2", "bullet 3"]
   }}
 }}
 
 The experience_bullets keys must match exactly: "title|company" format.
-Only include the top 4 most relevant roles.
 
 --- CANDIDATE PROFILE ---
 Name: {name}
@@ -58,6 +65,9 @@ Name: {name}
 
 Work Experience:
 {experience_text}
+
+Copy Cat Group — Live Projects (use these for specific, credible bullets):
+{copycat_projects}
 
 --- TARGET JOB ---
 Title: {job_title}
@@ -108,8 +118,18 @@ def calculate_ats_score(cv_text: str, keywords: list[str]) -> float:
     if not keywords:
         return 0.0
     cv_lower = cv_text.lower()
-    matched = sum(1 for kw in keywords if kw.lower() in cv_lower)
-    return round(matched / len(keywords) * 100, 1)
+    score = 0.0
+    for kw in keywords:
+        kw_lower = kw.lower()
+        if kw_lower in cv_lower:
+            score += 1.0
+        else:
+            # Partial credit: check how many individual words appear
+            words = [w for w in kw_lower.split() if len(w) > 2]
+            if words:
+                hits = sum(1 for w in words if w in cv_lower)
+                score += (hits / len(words)) * 0.8
+    return round(score / len(keywords) * 100, 1)
 
 
 def _cv_to_text(tailored: dict) -> str:
@@ -134,10 +154,15 @@ def tailor(job_id: int, title: str, company: str, jd_text: str) -> dict:
     print(f"  Found {len(keywords)} keywords")
 
     print(f"  Tailoring CV with AI...")
+    copycat_proj_text = "\n".join(
+        f"- {p['name']}: {p['description']}"
+        for p in cv.get("copycat_projects", [])
+    )
     prompt = TAILOR_PROMPT.format(
         name=cv["personal"]["name"],
         all_skills=_all_skills_text(cv),
         experience_text=_experience_text(cv),
+        copycat_projects=copycat_proj_text,
         job_title=title,
         company=company,
         keywords=", ".join(keywords),
@@ -193,28 +218,26 @@ def tailor(job_id: int, title: str, company: str, jd_text: str) -> dict:
         cv_lower = _cv_to_text(tailored).lower()
         missing = [kw for kw in keywords if kw.lower() not in cv_lower]
         if missing:
-            print(f"  Boosting score — {len(missing)} missing keywords, running second pass...")
-            boost_prompt = (
-                "You are an ATS CV optimiser. Rewrite ONLY the profile_summary and add to skills "
-                "to naturally include these missing keywords. Do not fabricate experience. "
-                "Return ONLY JSON: {{\"profile_summary\": \"...\", \"extra_skills\": [\"...\"]}}\\n\\n"
-                f"Current profile summary:\\n{tailored['profile_summary']}\\n\\n"
-                f"Missing keywords to include: {', '.join(missing)}\\n\\n"
-                f"Candidate's actual skills for reference:\\n{_all_skills_text(cv)}"
-            )
-            try:
-                boost_response = ask_ai(boost_prompt)
-                boost_cleaned = re.sub(r"```[a-z]*", "", boost_response).strip().strip("`").strip()
-                boost_data = json.loads(boost_cleaned)
-                tailored["profile_summary"] = boost_data.get("profile_summary", tailored["profile_summary"])
-                extra = boost_data.get("extra_skills", [])
-                if extra:
-                    existing = tailored["skills"].setdefault("Additional Skills", [])
-                    existing.extend(e for e in extra if e not in existing)
-                ats_score = calculate_ats_score(_cv_to_text(tailored), keywords)
-                tailored["ats_score"] = ats_score
-                print(f"  ATS Score after boost: {ats_score}%")
-            except Exception as e:
-                print(f"  [boost error] {e}")
+            # Only add short keywords (tools/tech names) — skip long contextual phrases
+            SKIP_PHRASES = {"client operations", "workflow", "intelligent solutions",
+                            "measurable results", "streamline", "enhance"}
+            injectable = [
+                kw for kw in missing
+                if len(kw.split()) <= 3
+                and kw.lower() not in SKIP_PHRASES
+            ]
+            if injectable:
+                print(f"  Boosting score — adding {len(injectable)} skill keywords...")
+                mid = len(injectable) // 2
+                group_a = injectable[:mid]
+                group_b = injectable[mid:]
+                a = tailored["skills"].setdefault("AI & Specialist Tools", [])
+                a.extend(kw for kw in group_a if kw not in a)
+                if group_b:
+                    b = tailored["skills"].setdefault("Platforms & Methods", [])
+                    b.extend(kw for kw in group_b if kw not in b)
+            ats_score = calculate_ats_score(_cv_to_text(tailored), keywords)
+            tailored["ats_score"] = ats_score
+            print(f"  ATS Score after boost: {ats_score}%")
 
     return tailored

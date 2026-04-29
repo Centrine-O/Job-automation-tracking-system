@@ -1,0 +1,195 @@
+"""FastAPI dashboard — serves the UI. Scheduler is managed by app/scheduler.py."""
+from datetime import datetime
+from pathlib import Path
+
+from fastapi import FastAPI, Request, HTTPException
+from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.templating import Jinja2Templates
+
+from app.config import settings
+from app.scheduler import build_scheduler
+from app.tracking.db import (
+    get_connection, count_applications_today,
+    get_notifications, count_unread_notifications, mark_notifications_read,
+)
+
+app = FastAPI(title="Job Automation Dashboard")
+templates = Jinja2Templates(directory="app/dashboard/templates")
+
+SCREENSHOTS_DIR = Path("data/screenshots")
+
+_scheduler = build_scheduler()
+
+
+@app.on_event("startup")
+def startup():
+    _scheduler.start()
+
+
+@app.on_event("shutdown")
+def shutdown():
+    _scheduler.shutdown()
+
+
+# ── Routes ─────────────────────────────────────────────────────────────────────
+
+@app.get("/", response_class=HTMLResponse)
+def dashboard(request: Request):
+    conn = get_connection()
+    total_jobs = conn.execute("SELECT COUNT(*) as c FROM jobs").fetchone()["c"]
+    qualified = conn.execute("SELECT COUNT(*) as c FROM jobs WHERE status='qualified'").fetchone()["c"]
+    applied_today = count_applications_today()
+    total_applied = conn.execute("SELECT COUNT(*) as c FROM applications WHERE status='applied'").fetchone()["c"]
+    needs_review = conn.execute("SELECT COUNT(*) as c FROM jobs WHERE status='needs_review'").fetchone()["c"]
+    replied = conn.execute("SELECT COUNT(*) as c FROM applications WHERE status='replied'").fetchone()["c"]
+
+    recent = conn.execute("""
+        SELECT a.id, a.submitted_at, a.submission_method, a.status, a.ats_score,
+               j.title, j.company, j.apply_method
+        FROM applications a JOIN jobs j ON j.id = a.job_id
+        ORDER BY a.submitted_at DESC LIMIT 10
+    """).fetchall()
+    conn.close()
+
+    return templates.TemplateResponse(request, "dashboard.html", {
+        "total_jobs": total_jobs,
+        "qualified": qualified,
+        "applied_today": applied_today,
+        "max_per_day": settings.max_applications_per_day,
+        "total_applied": total_applied,
+        "needs_review": needs_review,
+        "replied": replied,
+        "recent": [dict(r) for r in recent],
+        "dry_run": settings.dry_run,
+        "now": datetime.now().strftime("%Y-%m-%d %H:%M"),
+        "unread": count_unread_notifications(),
+    })
+
+
+@app.get("/queue", response_class=HTMLResponse)
+def review_queue(request: Request):
+    conn = get_connection()
+    rows = conn.execute("""
+        SELECT j.id, j.title, j.company, j.apply_url, j.skill_score, j.hire_score,
+               a.notes, a.submitted_at,
+               (SELECT GROUP_CONCAT(id) FROM applications WHERE job_id = j.id) as app_ids
+        FROM jobs j
+        LEFT JOIN applications a ON a.job_id = j.id AND a.status = 'needs_review'
+        WHERE j.status = 'needs_review'
+        ORDER BY j.skill_score DESC
+    """).fetchall()
+    conn.close()
+    return templates.TemplateResponse(request, "queue.html", {
+        "jobs": [dict(r) for r in rows],
+        "unread": count_unread_notifications(),
+    })
+
+
+@app.get("/history", response_class=HTMLResponse)
+def history(request: Request):
+    conn = get_connection()
+    rows = conn.execute("""
+        SELECT a.id, a.submitted_at, a.submission_method, a.status, a.ats_score,
+               a.cv_path, a.notes,
+               j.id as job_id, j.title, j.company, j.apply_url, j.apply_method,
+               j.skill_score, j.hire_score
+        FROM applications a JOIN jobs j ON j.id = a.job_id
+        ORDER BY a.submitted_at DESC
+    """).fetchall()
+    conn.close()
+
+    # Attach screenshot paths
+    apps = []
+    for r in rows:
+        row = dict(r)
+        job_slug = f"{row['job_id']}_"
+        row["screenshots"] = [
+            str(p) for p in SCREENSHOTS_DIR.glob(f"*{job_slug}*")
+        ] if SCREENSHOTS_DIR.exists() else []
+        apps.append(row)
+
+    return templates.TemplateResponse(request, "history.html", {
+        "applications": apps,
+        "unread": count_unread_notifications(),
+    })
+
+
+@app.post("/apply/{job_id}")
+def re_trigger(job_id: int):
+    """Re-trigger Playwright for a needs_review job."""
+    conn = get_connection()
+    job = conn.execute(
+        "SELECT * FROM jobs WHERE id=? AND status='needs_review'", (job_id,)
+    ).fetchone()
+    conn.close()
+
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found or not in needs_review state")
+
+    job = dict(job)
+    from app.cv.engine import tailor, extract_keywords
+    from app.cv.renderer import render
+    from app.submission import cover_letter as cl_gen
+    from app.submission.form_filler import submit
+
+    tailored = tailor(
+        job_id=job["id"],
+        title=job["title"],
+        company=job["company"],
+        jd_text=job.get("jd_text", ""),
+    )
+    paths = render(tailored)
+    cl_text = cl_gen.generate(
+        job_id=job["id"],
+        title=job["title"],
+        company=job["company"],
+        keywords=tailored["keywords"],
+    )
+    job_with_kw = {**job, "keywords": tailored["keywords"]}
+    result = submit(job=job_with_kw, cv_path=paths["pdf"], cover_letter_text=cl_text)
+    return JSONResponse(result)
+
+
+@app.get("/api/notifications")
+def api_notifications():
+    notes = get_notifications(limit=20)
+    unread = count_unread_notifications()
+    mark_notifications_read()
+    return JSONResponse({"notifications": notes, "unread": unread})
+
+
+@app.get("/api/unread-count")
+def api_unread_count():
+    return JSONResponse({"unread": count_unread_notifications()})
+
+
+@app.post("/mark-applied/{job_id}")
+def mark_applied(job_id: int):
+    """Mark a needs_review job as applied after manual submission."""
+    conn = get_connection()
+    conn.execute("UPDATE jobs SET status='applied' WHERE id=?", (job_id,))
+    conn.execute(
+        "UPDATE applications SET status='applied', submitted_at=? WHERE job_id=? AND status='needs_review'",
+        (datetime.utcnow().isoformat(), job_id)
+    )
+    conn.commit()
+    conn.close()
+    return {"ok": True}
+
+
+@app.post("/run-now")
+def run_now():
+    """Manually trigger the full pipeline immediately."""
+    import threading
+    from app.scheduler import job_scrape, job_score, job_generate_cvs, job_submit
+
+    def _run_all():
+        from app.scheduler import _run
+        _run("Scraper", job_scrape)
+        _run("Scorer", job_score)
+        _run("CV Generator", job_generate_cvs)
+        _run("Submitter", job_submit)
+
+    t = threading.Thread(target=_run_all, daemon=True)
+    t.start()
+    return {"ok": True, "message": "Full pipeline triggered"}

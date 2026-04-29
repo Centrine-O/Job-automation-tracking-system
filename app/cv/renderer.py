@@ -17,6 +17,32 @@ from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, HRFlowable
 OUTPUT_DIR = Path("data/cvs")
 
 
+def _add_hyperlink(paragraph, url: str, text: str, size: int = 10):
+    """Add a clickable hyperlink run to a DOCX paragraph."""
+    part = paragraph.part
+    r_id = part.relate_to(
+        url,
+        "http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink",
+        is_external=True,
+    )
+    hyperlink = OxmlElement("w:hyperlink")
+    hyperlink.set(qn("r:id"), r_id)
+    run_el = OxmlElement("w:r")
+    rPr = OxmlElement("w:rPr")
+    color = OxmlElement("w:color")
+    color.set(qn("w:val"), "0563C1")
+    u = OxmlElement("w:u")
+    u.set(qn("w:val"), "single")
+    rPr.append(color)
+    rPr.append(u)
+    run_el.append(rPr)
+    t = OxmlElement("w:t")
+    t.text = text
+    run_el.append(t)
+    hyperlink.append(run_el)
+    paragraph._p.append(hyperlink)
+
+
 def _slug(s: str) -> str:
     return "".join(c if c.isalnum() or c in "-_" else "_" for c in s)[:40]
 
@@ -78,7 +104,8 @@ def _render_docx(cv: dict, path: str):
     # Name
     p = doc.add_paragraph()
     p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    p.paragraph_format.space_after = Pt(2)
+    p.paragraph_format.space_before = Pt(0)
+    p.paragraph_format.space_after = Pt(6)
     run = p.add_run(cv["name"])
     run.bold = True
     run.font.size = Pt(16)
@@ -86,19 +113,26 @@ def _render_docx(cv: dict, path: str):
     # Location
     p = doc.add_paragraph()
     p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    p.paragraph_format.space_after = Pt(2)
+    p.paragraph_format.space_before = Pt(0)
+    p.paragraph_format.space_after = Pt(6)
     p.add_run(cv["location"]).font.size = Pt(10)
 
-    # Contact
-    parts = [cv["email"], cv["phone"]]
-    if cv.get("linkedin"):
-        parts.append("LinkedIn")
-    if cv.get("github"):
-        parts.append("GitHub")
+    # Contact line with clickable LinkedIn / GitHub
     p = doc.add_paragraph()
     p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    p.paragraph_format.space_after = Pt(6)
-    p.add_run(" | ".join(parts)).font.size = Pt(10)
+    p.paragraph_format.space_before = Pt(0)
+    p.paragraph_format.space_after = Pt(10)
+    contact_text = f"{cv['email']} | {cv['phone']}"
+    if cv.get("linkedin") or cv.get("github"):
+        contact_text += " | "
+    run = p.add_run(contact_text)
+    run.font.size = Pt(10)
+    if cv.get("linkedin"):
+        _add_hyperlink(p, cv["linkedin"], "LinkedIn")
+        if cv.get("github"):
+            p.add_run(" | ").font.size = Pt(10)
+    if cv.get("github"):
+        _add_hyperlink(p, cv["github"], "GitHub")
 
     # Profile Summary
     heading("PROFILE SUMMARY")
@@ -172,9 +206,9 @@ def _render_pdf(cv: dict, path: str):
 
     S = {
         "name": ParagraphStyle("name", fontSize=16, fontName="Helvetica-Bold",
-                               alignment=TA_CENTER, spaceAfter=3),
+                               alignment=TA_CENTER, spaceAfter=6),
         "contact": ParagraphStyle("contact", fontSize=10, fontName="Helvetica",
-                                  alignment=TA_CENTER, spaceAfter=6),
+                                  alignment=TA_CENTER, spaceAfter=10),
         "section": ParagraphStyle("section", fontSize=11, fontName="Helvetica-Bold",
                                   spaceBefore=8, spaceAfter=3),
         "body": ParagraphStyle("body", fontSize=10, fontName="Helvetica",
@@ -192,12 +226,12 @@ def _render_pdf(cv: dict, path: str):
     story.append(Paragraph(cv["name"], S["name"]))
     story.append(Paragraph(cv["location"], S["contact"]))
 
-    parts = [cv["email"], cv["phone"]]
+    contact_parts = [cv["email"], cv["phone"]]
     if cv.get("linkedin"):
-        parts.append("LinkedIn")
+        contact_parts.append(f'<link href="{cv["linkedin"]}"><u><font color="#0563C1">LinkedIn</font></u></link>')
     if cv.get("github"):
-        parts.append("GitHub")
-    story.append(Paragraph(" | ".join(parts), S["contact"]))
+        contact_parts.append(f'<link href="{cv["github"]}"><u><font color="#0563C1">GitHub</font></u></link>')
+    story.append(Paragraph(" | ".join(contact_parts), S["contact"]))
 
     def section(title):
         story.append(HRFlowable(width="100%", thickness=0.5, color=black, spaceAfter=2))

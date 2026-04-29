@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>History — Field Ops</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bone:#dedacf;
+  --bone-1:#d4d0c5;
+  --bone-2:#cac6bb;
+  --bone-3:#c0bcb1;
+  --onyx:#13140e;
+  --onyx-1:#191b13;
+  --onyx-dim:#3d4030;
+  --olive:#838236;
+  --olive-bright:#9a9a3f;
+  --olive-glow:rgba(131,130,54,0.1);
+  --olive-border:rgba(131,130,54,0.35);
+  --danger:#8b2020;
+  --danger-bright:#b83232;
+  --success:#2a5a35;
+  --success-bright:#3d8a4e;
+  --purple:#6b4a8e;
+}
+
+html,body{height:100%;background:var(--bone);color:var(--onyx);font-family:'Barlow Semi Condensed',sans-serif}
+
+body::after{
+  content:'';position:fixed;inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.035'/%3E%3C/svg%3E");
+  pointer-events:none;z-index:0;
+}
+*{position:relative;z-index:1}
+
+.shell{display:flex;height:100vh;overflow:hidden}
+
+/* ── Sidebar ── */
+.sidebar{
+  width:230px;flex-shrink:0;background:var(--onyx);
+  display:flex;flex-direction:column;padding:0;overflow:hidden;
+}
+.sb-logo{padding:28px 24px 24px;border-bottom:1px solid rgba(222,218,207,0.08)}
+.sb-logo-mark{
+  font-family:'IBM Plex Mono',monospace;font-size:.58rem;font-weight:500;
+  color:var(--olive);letter-spacing:3px;text-transform:uppercase;margin-bottom:6px;
+}
+.sb-logo-name{
+  font-family:'Barlow Semi Condensed',sans-serif;font-size:1.05rem;font-weight:800;
+  color:var(--bone);letter-spacing:1px;line-height:1.2;
+}
+.sb-logo-name span{color:var(--olive)}
+.sb-nav{flex:1;padding:16px 0;overflow-y:auto}
+.sb-section{
+  font-family:'IBM Plex Mono',monospace;font-size:.52rem;font-weight:500;
+  color:rgba(222,218,207,0.3);letter-spacing:2.5px;text-transform:uppercase;padding:16px 24px 8px;
+}
+.sb-item{
+  display:flex;align-items:center;gap:12px;padding:10px 24px;
+  color:rgba(222,218,207,0.5);text-decoration:none;
+  font-size:.82rem;font-weight:500;
+  transition:color .15s,background .15s;border-left:2px solid transparent;
+}
+.sb-item:hover{color:var(--bone);background:rgba(222,218,207,0.04)}
+.sb-item.active{color:var(--olive-bright);border-left-color:var(--olive);background:rgba(131,130,54,0.1)}
+.sb-icon{width:16px;height:16px;opacity:.6;flex-shrink:0}
+.sb-item.active .sb-icon{opacity:1}
+.sb-footer{padding:16px 24px;border-top:1px solid rgba(222,218,207,0.08)}
+.sb-status{
+  display:flex;align-items:center;gap:8px;
+  font-family:'IBM Plex Mono',monospace;font-size:.62rem;color:rgba(222,218,207,0.4);
+}
+.sb-dot{
+  width:6px;height:6px;border-radius:50%;
+  background:var(--olive-bright);box-shadow:0 0 6px var(--olive);
+  animation:pulse 2.5s ease-in-out infinite;
+}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* ── Main ── */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;background:var(--bone)}
+.topbar{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 32px;border-bottom:1px solid var(--bone-2);
+  background:var(--bone-1);flex-shrink:0;
+}
+.tb-left{font-family:'IBM Plex Mono',monospace;font-size:.68rem;color:var(--onyx-dim);letter-spacing:.5px}
+.tb-left strong{color:var(--onyx);font-weight:500}
+.tb-right{display:flex;align-items:center;gap:10px}
+
+/* ── Filter bar ── */
+.filter-bar{
+  display:flex;align-items:center;gap:8px;
+  padding:11px 32px;border-bottom:1px solid var(--bone-2);
+  background:var(--bone-1);flex-shrink:0;
+}
+.filter-label{
+  font-family:'IBM Plex Mono',monospace;font-size:.58rem;
+  color:var(--onyx-dim);letter-spacing:1.5px;text-transform:uppercase;margin-right:4px;
+}
+.filter-btn{
+  font-family:'IBM Plex Mono',monospace;font-size:.6rem;font-weight:500;
+  letter-spacing:.8px;text-transform:uppercase;
+  background:var(--bone-2);border:1px solid var(--bone-3);
+  color:var(--onyx-dim);padding:4px 11px;border-radius:2px;cursor:pointer;
+  transition:all .15s;
+}
+.filter-btn:hover{border-color:var(--olive-border);color:var(--onyx)}
+.filter-btn.active{
+  border-color:var(--olive-border);color:var(--olive);background:var(--olive-glow);
+}
+.filter-count{
+  margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size:.6rem;color:var(--onyx-dim);
+}
+.filter-count strong{color:var(--onyx)}
+
+/* Bell */
+.bell-wrap{position:relative}
+.bell-btn{
+  background:var(--bone-2);border:1px solid var(--bone-3);
+  color:var(--onyx-dim);width:34px;height:34px;border-radius:3px;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;
+}
+.bell-btn:hover{color:var(--onyx);border-color:var(--olive-border);background:var(--olive-glow)}
+.bell-badge{
+  position:absolute;top:-5px;right:-5px;
+  background:var(--danger-bright);color:#fff;
+  font-family:'IBM Plex Mono',monospace;font-size:.52rem;font-weight:600;
+  min-width:16px;height:16px;border-radius:2px;
+  display:flex;align-items:center;justify-content:center;padding:0 3px;
+}
+.notif-panel{
+  display:none;position:absolute;top:calc(100% + 8px);right:0;width:360px;
+  background:var(--bone);border:1px solid var(--bone-2);
+  border-radius:4px;box-shadow:0 16px 48px rgba(19,20,14,0.15);z-index:999;overflow:hidden;
+}
+.notif-panel.open{display:block;animation:fadeSlideIn .15s ease}
+@keyframes fadeSlideIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+.notif-header{
+  padding:12px 16px;font-family:'IBM Plex Mono',monospace;
+  font-size:.58rem;font-weight:500;letter-spacing:2px;color:var(--olive);
+  text-transform:uppercase;border-bottom:1px solid var(--bone-2);background:var(--bone-1);
+}
+.notif-list{max-height:420px;overflow-y:auto}
+.notif-list::-webkit-scrollbar{width:3px}
+.notif-list::-webkit-scrollbar-thumb{background:var(--bone-2)}
+.notif-item{padding:14px 16px;border-bottom:1px solid var(--bone-2)}
+.notif-item:last-child{border-bottom:none}
+.notif-item.unread{background:var(--olive-glow)}
+.notif-title{font-family:'Barlow Semi Condensed',sans-serif;font-size:.78rem;font-weight:700;color:var(--onyx);margin-bottom:6px}
+.notif-body{font-family:'IBM Plex Mono',monospace;font-size:.65rem;color:var(--onyx-dim);white-space:pre-wrap;line-height:1.7}
+.notif-time{font-family:'IBM Plex Mono',monospace;font-size:.58rem;color:var(--bone-3);margin-top:6px}
+.notif-empty{padding:32px 16px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:.7rem;color:var(--onyx-dim)}
+
+/* ── Content ── */
+.content{flex:1;overflow-y:auto;padding:32px}
+.content::-webkit-scrollbar{width:3px}
+.content::-webkit-scrollbar-thumb{background:var(--bone-2)}
+
+.page-header{margin-bottom:24px;display:flex;align-items:flex-end;justify-content:space-between}
+.page-title{font-size:2rem;font-weight:800;color:var(--onyx);letter-spacing:1px;line-height:1;margin-bottom:3px;text-transform:uppercase}
+.page-sub{font-family:'IBM Plex Mono',monospace;font-size:.65rem;color:var(--onyx-dim);letter-spacing:.5px}
+.total-pill{
+  font-family:'IBM Plex Mono',monospace;font-size:.62rem;
+  color:var(--onyx-dim);padding:5px 10px;
+  border:1px solid var(--bone-2);border-radius:2px;background:#fff;
+}
+.total-pill strong{color:var(--onyx);font-weight:600}
+
+/* ── Table ── */
+@keyframes cardIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+.table-wrap{
+  background:#fff;border:1px solid var(--bone-2);
+  border-radius:4px;overflow:hidden;
+  animation:cardIn .4s ease .1s both;
+}
+table{width:100%;border-collapse:collapse}
+thead tr{border-bottom:1px solid var(--bone-2)}
+th{
+  padding:11px 16px;text-align:left;
+  font-family:'IBM Plex Mono',monospace;font-size:.52rem;
+  font-weight:500;letter-spacing:1.8px;text-transform:uppercase;
+  color:var(--onyx-dim);background:var(--bone-1);white-space:nowrap;
+}
+td{
+  padding:12px 16px;border-bottom:1px solid var(--bone-1);
+  font-size:.8rem;color:var(--onyx);vertical-align:middle;
+}
+tbody tr:last-child td{border-bottom:none}
+tbody tr{transition:background .1s}
+tbody tr:hover{background:var(--olive-glow)}
+
+.row-id{font-family:'IBM Plex Mono',monospace;font-size:.63rem;color:var(--onyx-dim)}
+
+.role-name{font-weight:600;font-size:.83rem;color:var(--onyx)}
+.company-name{font-family:'IBM Plex Mono',monospace;font-size:.67rem;color:var(--onyx-dim);margin-top:2px}
+
+.method-tag{
+  display:inline-flex;align-items:center;gap:4px;
+  font-family:'IBM Plex Mono',monospace;font-size:.58rem;
+  font-weight:500;letter-spacing:1px;padding:3px 7px;
+  border-radius:2px;text-transform:uppercase;
+}
+.method-email{background:rgba(26,77,138,0.07);color:#1a4d8a;border:1px solid rgba(26,77,138,0.18)}
+.method-form{background:var(--olive-glow);color:var(--olive);border:1px solid var(--olive-border)}
+
+.ats-bar{display:flex;align-items:center;gap:8px}
+.ats-track{width:52px;height:3px;background:var(--bone-2);border-radius:2px;overflow:hidden}
+.ats-fill{height:100%;background:var(--olive);border-radius:2px}
+.ats-num{font-family:'IBM Plex Mono',monospace;font-size:.63rem;color:var(--onyx-dim);min-width:28px}
+
+.score-num{font-family:'IBM Plex Mono',monospace;font-size:.7rem;color:var(--onyx-dim)}
+
+.status-tag{
+  display:inline-flex;align-items:center;gap:5px;
+  font-family:'IBM Plex Mono',monospace;font-size:.58rem;
+  letter-spacing:.8px;text-transform:uppercase;
+}
+.status-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0}
+.s-applied .status-dot{background:var(--success-bright)}
+.s-applied{color:var(--success)}
+.s-replied .status-dot{background:var(--purple);animation:pulse 2s infinite}
+.s-replied{color:var(--purple)}
+.s-review .status-dot{background:var(--danger-bright)}
+.s-review{color:var(--danger)}
+
+.followup-flag{
+  font-family:'IBM Plex Mono',monospace;font-size:.56rem;
+  color:#8a6a10;padding:2px 6px;border-radius:2px;
+  background:rgba(138,106,16,0.08);border:1px solid rgba(138,106,16,0.2);
+  display:inline-block;margin-top:4px;white-space:nowrap;
+}
+
+.ts{font-family:'IBM Plex Mono',monospace;font-size:.63rem;color:var(--onyx-dim);letter-spacing:.3px;white-space:nowrap}
+
+.notes-cell{
+  font-family:'IBM Plex Mono',monospace;font-size:.63rem;
+  color:var(--onyx-dim);max-width:180px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+
+.cv-link{
+  font-family:'IBM Plex Mono',monospace;font-size:.6rem;
+  color:var(--olive);text-decoration:none;letter-spacing:.5px;
+  padding:3px 7px;border:1px solid var(--olive-border);border-radius:2px;
+  transition:all .15s;
+}
+.cv-link:hover{background:var(--olive-glow);color:var(--onyx)}
+
+.empty-row td{
+  text-align:center;padding:56px;
+  font-family:'IBM Plex Mono',monospace;font-size:.72rem;
+  color:var(--onyx-dim);letter-spacing:.5px;
+}
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <!-- ── Sidebar ── -->
+  <aside class="sidebar">
+    <div class="sb-logo">
+      <div class="sb-logo-mark">Field Ops v1</div>
+      <div class="sb-logo-name">Job<span>.</span>Auto</div>
+    </div>
+    <nav class="sb-nav">
+      <div class="sb-section">Command</div>
+      <a href="/" class="sb-item">
+        <svg class="sb-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+          <rect x="1" y="1" width="6" height="6" rx="1"/><rect x="9" y="1" width="6" height="6" rx="1"/>
+          <rect x="1" y="9" width="6" height="6" rx="1"/><rect x="9" y="9" width="6" height="6" rx="1"/>
+        </svg>
+        Overview
+      </a>
+      <a href="/queue" class="sb-item">
+        <svg class="sb-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M8 2v5l3 2"/><circle cx="8" cy="9" r="6"/>
+        </svg>
+        Review Queue
+      </a>
+      <a href="/history" class="sb-item active">
+        <svg class="sb-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M2 4h12M2 8h9M2 12h6"/>
+        </svg>
+        History
+      </a>
+    </nav>
+    <div class="sb-footer">
+      <div class="sb-status">
+        <div class="sb-dot"></div>
+        Pipeline active
+      </div>
+    </div>
+  </aside>
+
+  <!-- ── Main ── -->
+  <div class="main">
+    <div class="topbar">
+      <div class="tb-left">
+        <strong>Application History</strong> &nbsp;·&nbsp; Full submission log
+      </div>
+      <div class="tb-right">
+        <div class="bell-wrap" id="bellWrap">
+          <button class="bell-btn" onclick="toggleNotif()" title="Reports">
+            <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M7.5 1.5a4.5 4.5 0 0 0-4.5 4.5v3.5L1.5 11h12L12 9.5V6a4.5 4.5 0 0 0-4.5-4.5Z"/>
+              <path d="M6 11.5a1.5 1.5 0 0 0 3 0"/>
+            </svg>
+          </button>
+          {% if unread > 0 %}<div class="bell-badge" id="bellBadge">{{ unread }}</div>{% endif %}
+          <div class="notif-panel" id="notifPanel">
+            <div class="notif-header">Daily Reports</div>
+            <div class="notif-list" id="notifList"><div class="notif-empty">Loading...</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filter bar -->
+    <div class="filter-bar">
+      <span class="filter-label">Filter</span>
+      <button class="filter-btn active" onclick="filterRows('all',this)">All</button>
+      <button class="filter-btn" onclick="filterRows('applied',this)">Applied</button>
+      <button class="filter-btn" onclick="filterRows('replied',this)">Replied</button>
+      <button class="filter-btn" onclick="filterRows('needs_review',this)">Review</button>
+      <button class="filter-btn" onclick="filterRows('email',this)">Email</button>
+      <button class="filter-btn" onclick="filterRows('form',this)">Form</button>
+      <div class="filter-count">
+        <strong id="visibleCount">{{ applications|length }}</strong> / {{ applications|length }} shown
+      </div>
+    </div>
+
+    <div class="content">
+      <div class="page-header">
+        <div>
+          <div class="page-title">History</div>
+          <div class="page-sub">All submissions &nbsp;·&nbsp; Most recent first</div>
+        </div>
+        <div class="total-pill"><strong>{{ applications|length }}</strong> total</div>
+      </div>
+
+      <div class="table-wrap">
+        <table id="historyTable">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Role / Company</th>
+              <th>Method</th>
+              <th>ATS</th>
+              <th>Skill</th>
+              <th>Status</th>
+              <th>Submitted</th>
+              <th>Notes</th>
+              <th>CV</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% if applications %}
+              {% for a in applications %}
+              {% set method = a.apply_method or a.submission_method %}
+              <tr data-status="{{ a.status }}" data-method="{{ method }}">
+
+                <td><span class="row-id">{{ a.id }}</span></td>
+
+                <td>
+                  {% if a.apply_url %}
+                  <a href="{{ a.apply_url }}" target="_blank" rel="noopener" style="text-decoration:none">
+                    <div class="role-name">{{ a.title }}</div>
+                  </a>
+                  {% else %}
+                  <div class="role-name">{{ a.title }}</div>
+                  {% endif %}
+                  <div class="company-name">{{ a.company }}</div>
+                </td>
+
+                <td>
+                  {% if method == 'email' %}
+                  <span class="method-tag method-email">Email</span>
+                  {% else %}
+                  <span class="method-tag method-form">Form</span>
+                  {% endif %}
+                </td>
+
+                <td>
+                  {% if a.ats_score %}
+                  <div class="ats-bar">
+                    <div class="ats-track"><div class="ats-fill" style="width:{{ a.ats_score }}%"></div></div>
+                    <span class="ats-num">{{ a.ats_score }}%</span>
+                  </div>
+                  {% else %}<span class="ts">—</span>{% endif %}
+                </td>
+
+                <td>
+                  {% if a.skill_score %}<span class="score-num">{{ a.skill_score }}%</span>
+                  {% else %}<span class="ts">—</span>{% endif %}
+                </td>
+
+                <td>
+                  {% if a.status == 'applied' %}
+                  <span class="status-tag s-applied"><span class="status-dot"></span>Applied</span>
+                  {% elif a.status == 'replied' %}
+                  <span class="status-tag s-replied"><span class="status-dot"></span>Replied</span>
+                  {% elif a.status == 'needs_review' %}
+                  <span class="status-tag s-review"><span class="status-dot"></span>Review</span>
+                  {% else %}
+                  <span class="status-tag"><span class="status-dot" style="background:var(--onyx-dim)"></span>{{ a.status }}</span>
+                  {% endif %}
+                  {% if a.follow_up_21_at and not a.follow_up_30_at %}
+                  <span class="followup-flag">21d follow-up</span>
+                  {% elif a.follow_up_30_at %}
+                  <span class="followup-flag">30d follow-up</span>
+                  {% endif %}
+                </td>
+
+                <td><span class="ts">{{ a.submitted_at[:16] if a.submitted_at else '—' }}</span></td>
+
+                <td>
+                  {% if a.notes %}
+                  <span class="notes-cell" title="{{ a.notes }}">{{ a.notes[:60] }}</span>
+                  {% else %}<span class="ts">—</span>{% endif %}
+                </td>
+
+                <td>
+                  {% if a.cv_path %}
+                  <a href="{{ a.cv_path }}" class="cv-link" target="_blank" rel="noopener">PDF</a>
+                  {% else %}<span class="ts">—</span>{% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+            {% else %}
+              <tr class="empty-row">
+                <td colspan="9">No applications recorded yet — run the pipeline to begin.</td>
+              </tr>
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function filterRows(filter, btn){
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  const rows = document.querySelectorAll('#historyTable tbody tr[data-status]');
+  let visible = 0;
+  rows.forEach(row=>{
+    const show = filter === 'all'
+      || filter === row.dataset.status
+      || filter === row.dataset.method;
+    row.style.display = show ? '' : 'none';
+    if(show) visible++;
+  });
+  document.getElementById('visibleCount').textContent = visible;
+}
+
+let notifLoaded = false;
+async function toggleNotif(){
+  const panel = document.getElementById('notifPanel');
+  panel.classList.toggle('open');
+  if(panel.classList.contains('open') && !notifLoaded){
+    notifLoaded = true;
+    const r = await fetch('/api/notifications');
+    const d = await r.json();
+    const badge = document.getElementById('bellBadge');
+    if(badge) badge.remove();
+    const list = document.getElementById('notifList');
+    if(!d.notifications.length){
+      list.innerHTML = '<div class="notif-empty">No reports yet.\nFirst one arrives at midnight.</div>';
+      return;
+    }
+    list.innerHTML = d.notifications.map(n=>`
+      <div class="notif-item ${n.read?'':'unread'}">
+        <div class="notif-title">${n.title}</div>
+        <div class="notif-body">${n.body}</div>
+        <div class="notif-time">${n.created_at}</div>
+      </div>
+    `).join('');
+  }
+}
+document.addEventListener('click', e=>{
+  const w = document.getElementById('bellWrap');
+  if(w && !w.contains(e.target)) document.getElementById('notifPanel').classList.remove('open');
+});
+</script>
+</body>
+</html>

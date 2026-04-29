@@ -570,12 +570,12 @@ footer strong{
   <!-- SIDEBAR -->
   <aside class="sidebar">
     <div class="sb-title">Jump to phase</div>
-    <a class="sb-link active" href="#phase-0"><span class="sb-dot dot-active"></span>0 &mdash; Foundation</a>
-    <a class="sb-link" href="#phase-1"><span class="sb-dot dot-pending"></span>1 &mdash; Database</a>
-    <a class="sb-link" href="#phase-2"><span class="sb-dot dot-pending"></span>2 &mdash; Scrapers</a>
-    <a class="sb-link" href="#phase-3"><span class="sb-dot dot-pending"></span>3 &mdash; AI + Scoring</a>
-    <a class="sb-link" href="#phase-4"><span class="sb-dot dot-pending"></span>4 &mdash; CV Engine</a>
-    <a class="sb-link" href="#phase-5"><span class="sb-dot dot-pending"></span>5 &mdash; Submission</a>
+    <a class="sb-link" href="#phase-0"><span class="sb-dot dot-done"></span>0 &mdash; Foundation ✓</a>
+    <a class="sb-link" href="#phase-1"><span class="sb-dot dot-done"></span>1 &mdash; Database ✓</a>
+    <a class="sb-link" href="#phase-2"><span class="sb-dot dot-done"></span>2 &mdash; Scrapers ✓</a>
+    <a class="sb-link" href="#phase-3"><span class="sb-dot dot-done"></span>3 &mdash; AI + Scoring ✓</a>
+    <a class="sb-link" href="#phase-4"><span class="sb-dot dot-done"></span>4 &mdash; CV Engine ✓</a>
+    <a class="sb-link active" href="#phase-5"><span class="sb-dot dot-active"></span>5 &mdash; Submission</a>
     <a class="sb-link" href="#phase-6"><span class="sb-dot dot-pending"></span>6 &mdash; Scheduler</a>
     <a class="sb-link" href="#phase-7"><span class="sb-dot dot-pending"></span>7 &mdash; Dashboard</a>
     <a class="sb-link" href="#phase-8"><span class="sb-dot dot-pending"></span>8 &mdash; n8n</a>
@@ -587,10 +587,10 @@ footer strong{
   <div>
 
     <!-- ─── FOCUS CARD ─── -->
-    <div class="focus-card">
+    <div class="focus-card" style="border-color:var(--amber);background:var(--amber-light)">
       <div class="fc-eyebrow">&#9658; Start Here &mdash; Current Focus</div>
-      <div class="fc-title">Phase 1: Database &amp; Master CV</div>
-      <p class="fc-desc">Build everything on your laptop first. Start with the database schema and your master CV JSON &mdash; these are the foundation every other module reads from. VPS setup comes last, once the full system works locally.</p>
+      <div class="fc-title">🟡 Now Building — Phase 7: FastAPI Dashboard</div>
+      <p class="fc-desc">Polished ONYX/OLIVE/BONE dashboard with full live data — Overview, Review Queue, and History pages. Dark sidebar, bone background, Syne + JetBrains Mono fonts. All three templates connected to real DB with no mock data.</p>
     </div>
 
     <!-- ─── PHASES ─── -->
@@ -601,13 +601,13 @@ footer strong{
         <details open>
           <summary>
             <div class="phase-header">
-              <div class="phase-num num-active">0</div>
+              <div class="phase-num num-done">0</div>
               <div class="phase-info">
                 <div class="phase-name">Foundation &amp; Infrastructure</div>
                 <div class="phase-tagline">Oracle Cloud VPS &middot; Docker Compose &middot; Project skeleton</div>
               </div>
               <div class="phase-meta">
-                <span class="phase-pill pill-active">In Progress</span>
+                <span class="phase-pill pill-done">Complete</span>
                 <span class="phase-task-count">9 tasks</span>
                 <span class="chevron">&#9658;</span>
               </div>
@@ -725,13 +725,13 @@ footer strong{
         <details>
           <summary>
             <div class="phase-header">
-              <div class="phase-num">1</div>
+              <div class="phase-num num-done">1</div>
               <div class="phase-info">
                 <div class="phase-name">Database Schema &amp; Master CV</div>
                 <div class="phase-tagline">SQLite tables &middot; db.py interface &middot; master_cv.json profile</div>
               </div>
               <div class="phase-meta">
-                <span class="phase-pill pill-pending">Not Started</span>
+                <span class="phase-pill pill-done">Complete</span>
                 <span class="phase-task-count">5 tasks</span>
                 <span class="chevron">&#9658;</span>
               </div>
@@ -817,13 +817,13 @@ footer strong{
         <details>
           <summary>
             <div class="phase-header">
-              <div class="phase-num">2</div>
+              <div class="phase-num num-done">2</div>
               <div class="phase-info">
                 <div class="phase-name">Job Board Scrapers</div>
                 <div class="phase-tagline">8 sources &middot; requests + BeautifulSoup + Playwright &middot; RSS feeds &middot; SerpAPI</div>
               </div>
               <div class="phase-meta">
-                <span class="phase-pill pill-pending">Not Started</span>
+                <span class="phase-pill pill-done">Complete</span>
                 <span class="phase-task-count">10 tasks</span>
                 <span class="chevron">&#9658;</span>
               </div>
@@ -955,13 +955,13 @@ footer strong{
         <details>
           <summary>
             <div class="phase-header">
-              <div class="phase-num">3</div>
+              <div class="phase-num num-done">3</div>
               <div class="phase-info">
                 <div class="phase-name">AI Client &amp; Scoring Engine</div>
-                <div class="phase-tagline">Gemini &rarr; Groq &rarr; Ollama fallback &middot; Skill score &middot; Hire probability score</div>
+                <div class="phase-tagline">Cohere &rarr; OpenRouter &rarr; Gemini &rarr; Groq fallback &middot; Skill score &middot; Hire probability score</div>
               </div>
               <div class="phase-meta">
-                <span class="phase-pill pill-pending">Not Started</span>
+                <span class="phase-pill pill-done">Complete</span>
                 <span class="phase-task-count">6 tasks</span>
                 <span class="chevron">&#9658;</span>
               </div>
@@ -1058,13 +1058,13 @@ footer strong{
         <details>
           <summary>
             <div class="phase-header">
-              <div class="phase-num">4</div>
+              <div class="phase-num num-done">4</div>
               <div class="phase-info">
                 <div class="phase-name">CV Generation Engine</div>
                 <div class="phase-tagline">Keyword extraction &middot; ATS self-scoring loop &middot; PDF + DOCX output</div>
               </div>
               <div class="phase-meta">
-                <span class="phase-pill pill-pending">Not Started</span>
+                <span class="phase-pill pill-done">Complete</span>
                 <span class="phase-task-count">8 tasks</span>
                 <span class="chevron">&#9658;</span>
               </div>
@@ -1180,20 +1180,52 @@ footer strong{
         <details>
           <summary>
             <div class="phase-header">
-              <div class="phase-num">5</div>
+              <div class="phase-num num-done">5</div>
               <div class="phase-info">
                 <div class="phase-name">Application Submission</div>
-                <div class="phase-tagline">Gmail API &middot; Playwright form automation &middot; Rate limiting &middot; Reply detection</div>
+                <div class="phase-tagline">Gmail API &middot; Playwright + AI form filler &middot; Cover letter PDF &middot; Rate limiting</div>
               </div>
               <div class="phase-meta">
-                <span class="phase-pill pill-pending">Not Started</span>
+                <span class="phase-pill pill-done">Complete</span>
                 <span class="phase-task-count">6 tasks</span>
                 <span class="chevron">&#9658;</span>
               </div>
             </div>
           </summary>
           <div class="phase-body">
-            <p class="phase-goal"><strong>Goal:</strong> The system can deliver a job application two ways &mdash; email (CV attached, professional body) and web form (Playwright fills and submits, screenshots each step). Max 15 applications per day. Every submission is recorded in SQLite with a timestamp. Gmail replies are scanned every 6 hours to detect interview invites.</p>
+            <p class="phase-goal"><strong>Goal:</strong> The system can deliver a job application two ways &mdash; email (CV attached, short AI-generated cover letter) and web form (Playwright opens the browser, user reviews and submits). Applications are spread across an 8am&ndash;5pm window, max 15/day. A minimal FastAPI dashboard shows the review queue and full application history.</p>
+
+            <pre style="background:#F3F4F6;border:1px solid #E5E7EB;border-radius:8px;padding:16px 20px;font-family:Consolas,'Courier New',monospace;font-size:12px;line-height:1.7;overflow-x:auto;margin-bottom:20px;color:#1C1812;">APScheduler (inside FastAPI process)
+    │
+    ├── Every 2 hours (8am–5pm): Scraper → Scorer → CV + Cover Letter Generator
+    │       Picks top qualified jobs by score, marks as "ready"
+    │
+    ├── Email jobs → Gmail API → sent automatically → marked "applied"
+    │
+    └── Form jobs → Playwright + AI Form Filler (fully automated)
+                         │
+                         ├── Navigate to apply_url
+                         ├── Read all form fields + question labels
+                         ├── AI generates answers for every field:
+                         │       • Standard fields  → name, email, phone, location from profile
+                         │       • File uploads     → attach tailored CV + cover letter PDF
+                         │       • Open-ended Qs   → AI writes answer using JD + candidate profile
+                         │       • Salary fields    → AI researches role/location market rate
+                         │       • Dropdowns/radio  → AI selects best matching option
+                         ├── Fill all fields → submit form → screenshot confirmation
+                         └── Mark "applied" in DB
+                                  │
+                                  └── EXCEPTION only (captcha / login wall / unrecognised structure)
+                                            ↓
+                                  Flagged as "needs_review" in Dashboard queue
+                                  User completes remaining fields, submits, marks done
+
+FastAPI app on localhost:8000
+    ├── /            → Dashboard: stats, today's activity, pipeline health
+    ├── /queue       → Exception queue (only stuck/failed form jobs)
+    ├── /history     → All applications with status and screenshots
+    └── /apply/{id}  → Re-triggers Playwright for a flagged job</pre>
+
             <div class="phase-sections">
               <div>
                 <div class="tasks-label">Tasks</div>
@@ -1281,13 +1313,13 @@ footer strong{
         <details>
           <summary>
             <div class="phase-header">
-              <div class="phase-num">6</div>
+              <div class="phase-num num-done">6</div>
               <div class="phase-info">
                 <div class="phase-name">Scheduler &amp; Pipeline Wiring</div>
-                <div class="phase-tagline">APScheduler &middot; Entry point &middot; Full end-to-end pipeline dry run</div>
+                <div class="phase-tagline">APScheduler &middot; Granular cron jobs &middot; File logging &middot; Config validation &middot; Daily digest</div>
               </div>
               <div class="phase-meta">
-                <span class="phase-pill pill-pending">Not Started</span>
+                <span class="phase-pill pill-done">Complete</span>
                 <span class="phase-task-count">5 tasks</span>
                 <span class="chevron">&#9658;</span>
               </div>
@@ -1381,13 +1413,13 @@ footer strong{
         <details>
           <summary>
             <div class="phase-header">
-              <div class="phase-num">7</div>
+              <div class="phase-num num-active">7</div>
               <div class="phase-info">
                 <div class="phase-name">FastAPI Dashboard</div>
-                <div class="phase-tagline">Login page &middot; Pipeline view &middot; Job feed &middot; Stats &middot; REST API for n8n</div>
+                <div class="phase-tagline">ONYX/OLIVE/BONE design &middot; Overview &middot; Queue &middot; History &middot; Live DB data</div>
               </div>
               <div class="phase-meta">
-                <span class="phase-pill pill-pending">Not Started</span>
+                <span class="phase-pill pill-active">In Progress</span>
                 <span class="phase-task-count">9 tasks</span>
                 <span class="chevron">&#9658;</span>
               </div>
