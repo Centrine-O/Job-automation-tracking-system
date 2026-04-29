@@ -4,18 +4,18 @@
 
 @layer base {
   :root {
-    --background: 46 20% 84%;      /* #dedacf bone */
-    --foreground: 68 15% 8%;       /* #13140e onyx */
-    --card: 0 0% 100%;             /* #ffffff */
+    --background: 46 20% 84%;
+    --foreground: 68 15% 8%;
+    --card: 0 0% 100%;
     --card-foreground: 68 15% 8%;
-    --primary: 60 39% 36%;         /* #838236 olive */
+    --primary: 60 39% 36%;
     --primary-foreground: 0 0% 100%;
     --muted: 46 14% 82%;
-    --muted-foreground: 68 12% 25%;  /* #474a38 onyx-dim */
-    --border: 46 14% 75%;          /* #c8c4b9 bone-2 */
+    --muted-foreground: 68 12% 25%;
+    --border: 46 14% 75%;
     --input: 46 14% 75%;
     --ring: 60 39% 36%;
-    --destructive: 0 48% 51%;      /* #c44040 */
+    --destructive: 0 48% 51%;
     --destructive-foreground: 0 0% 100%;
     --radius: 0.5rem;
   }
