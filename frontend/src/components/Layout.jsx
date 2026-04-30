@@ -42,7 +42,6 @@ export default function Layout({ dryRun }) {
       {/* ── Sidebar ── */}
       <aside className="w-[220px] flex-shrink-0 flex flex-col bg-onyx text-bone">
         <div className="px-5 pt-6 pb-4 border-b border-white/10">
-          <p className="font-mono text-[10px] tracking-widest text-bone/40 uppercase mb-1">JOB AUTOMATION</p>
           <p className="font-serif text-xl font-semibold tracking-tight">Job.Auto</p>
         </div>
 
