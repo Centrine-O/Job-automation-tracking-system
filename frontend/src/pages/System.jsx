@@ -3,49 +3,59 @@ import { motion } from 'framer-motion'
 import { getSystemStatus, getSystemHealth } from '@/lib/api'
 
 const STAGE_LABELS = {
-  idle:              'Idle',
-  scraping:          'Scraping Jobs',
-  scoring:           'Scoring Jobs',
-  generating_cvs:    'Generating CVs',
-  submitting:        'Submitting Applications',
-  detecting_replies: 'Detecting Replies',
-  checking_followups:'Checking Follow-ups',
-  sending_digest:    'Sending Digest',
+  idle:               'Idle',
+  scraping:           'Scraping Jobs',
+  scoring:            'Scoring Jobs',
+  generating_cvs:     'Generating CVs',
+  submitting:         'Submitting',
+  detecting_replies:  'Detecting Replies',
+  checking_followups: 'Checking Follow-ups',
+  sending_digest:     'Sending Digest',
 }
 
-const STATUS_RING = {
-  ok:    'border-emerald-300 bg-emerald-50',
-  warn:  'border-amber-300  bg-amber-50',
-  error: 'border-red-300    bg-red-50',
-}
-const STATUS_DOT = {
-  ok:    'bg-emerald-500',
-  warn:  'bg-amber-400',
-  error: 'bg-red-500',
-}
-const STATUS_TEXT = {
-  ok:    'text-emerald-700',
-  warn:  'text-amber-700',
-  error: 'text-red-700',
+const PIPELINE_STEPS = [
+  { key: 'scraping',           short: 'Scrape' },
+  { key: 'scoring',            short: 'Score' },
+  { key: 'generating_cvs',     short: 'CVs' },
+  { key: 'submitting',         short: 'Submit' },
+  { key: 'detecting_replies',  short: 'Replies' },
+  { key: 'checking_followups', short: 'Follow-up' },
+  { key: 'sending_digest',     short: 'Digest' },
+]
+
+const SVC_STATUS = {
+  ok:    { dot: 'bg-emerald-400', badge: 'text-emerald-500', label: 'OK' },
+  warn:  { dot: 'bg-amber-400',   badge: 'text-amber-500',   label: 'WARN' },
+  error: { dot: 'bg-red-400',     badge: 'text-red-500',     label: 'ERR' },
 }
 
-function fmt(isoUtc) {
-  if (!isoUtc) return '—'
-  const d = new Date(isoUtc.endsWith('Z') ? isoUtc : isoUtc + 'Z')
-  return d.toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+function parseDate(iso) {
+  if (!iso) return null
+  const d = new Date(iso)
+  return isNaN(d.getTime()) ? null : d
 }
 
-function fmtTime(isoUtc) {
-  if (!isoUtc) return '—'
-  const d = new Date(isoUtc.endsWith('Z') ? isoUtc : isoUtc + 'Z')
-  return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+function clockTime(iso) {
+  const d = parseDate(iso)
+  return d ? d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '—'
+}
+
+function relTime(iso) {
+  const d = parseDate(iso)
+  if (!d) return ''
+  const ms = d - Date.now()
+  const abs = Math.abs(ms)
+  if (abs < 60000) return 'now'
+  const h = Math.floor(abs / 3600000)
+  const m = Math.floor((abs % 3600000) / 60000)
+  const str = h > 0 ? `${h}h ${m}m` : `${m}m`
+  return ms > 0 ? `in ${str}` : `${str} ago`
 }
 
 export default function System() {
-  const [status,  setStatus]  = useState(null)
-  const [health,  setHealth]  = useState(null)
-  const [error,   setError]   = useState(null)
-  const [tick,    setTick]    = useState(0)
+  const [status, setStatus] = useState(null)
+  const [health, setHealth] = useState(null)
+  const [error,  setError]  = useState(null)
 
   const fetchAll = useCallback(async () => {
     try {
@@ -60,7 +70,7 @@ export default function System() {
 
   useEffect(() => {
     fetchAll()
-    const id = setInterval(() => { fetchAll(); setTick(t => t + 1) }, 5000)
+    const id = setInterval(fetchAll, 5000)
     return () => clearInterval(id)
   }, [fetchAll])
 
@@ -71,113 +81,142 @@ export default function System() {
   const isActive = pipeline.stage !== 'idle'
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-5">
+      <div className="flex items-baseline justify-between">
         <h1 className="font-serif text-3xl font-bold text-onyx">System</h1>
-        <span className="font-mono text-[10px] text-onyx-dim">
-          auto-refresh every 5s
-        </span>
+        <span className="font-mono text-[10px] text-onyx-dim tabular-nums">↻ 5s</span>
       </div>
 
-      <div className="grid grid-cols-2 gap-5">
-        {/* ── Pipeline Monitor ── */}
-        <div className="bg-white rounded-lg border border-bone-2 p-5 flex flex-col gap-5">
-          <div className="flex items-center justify-between">
-            <p className="font-mono text-[10px] tracking-widest uppercase text-onyx-dim">Pipeline Monitor</p>
-            <span className={`w-2 h-2 rounded-full transition-colors ${isActive ? 'bg-olive animate-pulse' : 'bg-bone-2'}`} />
-          </div>
-
-          {/* Current stage */}
-          <div>
-            <p className="font-mono text-[9px] tracking-widest uppercase text-onyx-dim mb-1">Current Stage</p>
-            <motion.p
-              key={pipeline.stage}
-              initial={{ opacity: 0, y: 6 }}
-              animate={{ opacity: 1, y: 0 }}
-              className={`font-serif text-2xl font-bold leading-tight ${isActive ? 'text-olive' : 'text-onyx-dim'}`}
-            >
-              {STAGE_LABELS[pipeline.stage] ?? pipeline.stage}
-            </motion.p>
-            {isActive && pipeline.stage_started_at && (
-              <p className="font-mono text-[10px] text-onyx-dim mt-0.5">
-                started {fmtTime(pipeline.stage_started_at)}
-              </p>
-            )}
-          </div>
-
-          {/* Last completed */}
-          <div>
-            <p className="font-mono text-[9px] tracking-widest uppercase text-onyx-dim mb-1">Last Completed</p>
-            <p className="font-mono text-xs text-onyx">
-              {pipeline.last_stage ? `${STAGE_LABELS[pipeline.last_stage] ?? pipeline.last_stage} — ` : ''}{fmt(pipeline.last_run_at)}
-            </p>
-          </div>
-
-          {/* Error banner */}
-          {pipeline.error && (
-            <div className="rounded border border-red-200 bg-red-50 px-3 py-2">
-              <p className="font-mono text-[10px] text-red-600 break-all">{pipeline.error}</p>
-            </div>
-          )}
-
-          {/* Scheduled jobs */}
-          <div className="flex-1">
-            <p className="font-mono text-[9px] tracking-widest uppercase text-onyx-dim mb-2">Scheduled Jobs</p>
-            <div className="divide-y divide-bone-1">
-              {Object.entries(scheduled).map(([id, job]) => (
-                <div key={id} className="flex items-center justify-between py-1.5">
-                  <span className="font-mono text-[11px] text-onyx">{job.label}</span>
-                  <span className="font-mono text-[10px] text-onyx-dim tabular-nums">
-                    {fmtTime(job.next_run)}
-                  </span>
-                </div>
-              ))}
-            </div>
+      {/* ── Pipeline — dark card ── */}
+      <div className="bg-onyx rounded-lg overflow-hidden">
+        {/* Header row */}
+        <div className="flex items-center justify-between px-5 pt-4 pb-3 border-b border-white/5">
+          <p className="font-mono text-[9px] tracking-[0.18em] uppercase text-bone/40">Pipeline Monitor</p>
+          <div className="flex items-center gap-1.5">
+            <span className={`w-1.5 h-1.5 rounded-full ${isActive ? 'bg-olive animate-pulse' : 'bg-white/15'}`} />
+            <span className="font-mono text-[10px] text-bone/40">{isActive ? 'running' : 'idle'}</span>
           </div>
         </div>
 
-        {/* ── Services Health ── */}
-        <div className="bg-white rounded-lg border border-bone-2 p-5 flex flex-col gap-4">
-          <div className="flex items-center justify-between">
-            <p className="font-mono text-[10px] tracking-widest uppercase text-onyx-dim">Services Health</p>
+        {/* Stage flow */}
+        <div className="px-5 py-4 flex items-center gap-px">
+          {PIPELINE_STEPS.map((step, i) => {
+            const active = pipeline.stage === step.key
+            return (
+              <div key={step.key} className="flex items-center gap-px flex-1 min-w-0">
+                <motion.div
+                  animate={active ? { opacity: [1, 0.55, 1] } : {}}
+                  transition={active ? { repeat: Infinity, duration: 1.4, ease: 'easeInOut' } : {}}
+                  className={`flex-1 py-2 text-center rounded-sm transition-all duration-300 ${
+                    active ? 'bg-olive' : 'bg-white/[0.04]'
+                  } ${i === 0 ? 'rounded-l' : ''} ${i === PIPELINE_STEPS.length - 1 ? 'rounded-r' : ''}`}
+                >
+                  <p className={`font-mono text-[9px] tracking-wide truncate px-1 ${
+                    active ? 'text-white font-semibold' : 'text-bone/25'
+                  }`}>
+                    {step.short}
+                  </p>
+                </motion.div>
+                {i < PIPELINE_STEPS.length - 1 && (
+                  <span className="text-white/8 font-mono text-[8px] select-none">│</span>
+                )}
+              </div>
+            )
+          })}
+        </div>
+
+        {/* Stage detail + last run */}
+        <div className="px-5 pb-4 flex items-end justify-between">
+          <div>
+            <p className="font-mono text-[9px] tracking-[0.15em] uppercase text-bone/30 mb-0.5">Current stage</p>
+            <motion.p
+              key={pipeline.stage}
+              initial={{ opacity: 0, y: 4 }}
+              animate={{ opacity: 1, y: 0 }}
+              className={`font-serif text-2xl font-bold leading-none ${isActive ? 'text-olive' : 'text-bone/25'}`}
+            >
+              {STAGE_LABELS[pipeline.stage] ?? pipeline.stage}
+            </motion.p>
+          </div>
+          <div className="text-right">
+            <p className="font-mono text-[9px] tracking-[0.15em] uppercase text-bone/30 mb-0.5">Last completed</p>
+            <p className="font-mono text-xs text-bone/50">
+              {pipeline.last_stage
+                ? `${STAGE_LABELS[pipeline.last_stage] ?? pipeline.last_stage} · ${clockTime(pipeline.last_run_at)}`
+                : '—'}
+            </p>
+          </div>
+        </div>
+
+        {pipeline.error && (
+          <div className="mx-5 mb-4 rounded border border-red-500/25 bg-red-500/8 px-3 py-2">
+            <p className="font-mono text-[10px] text-red-400 break-all">{pipeline.error}</p>
+          </div>
+        )}
+      </div>
+
+      {/* ── Bottom row ── */}
+      <div className="grid grid-cols-2 gap-5">
+
+        {/* Scheduled Jobs */}
+        <div className="bg-white rounded-lg border border-bone-2 p-4">
+          <p className="font-mono text-[9px] tracking-[0.18em] uppercase text-onyx-dim mb-3">Scheduled Jobs</p>
+          <div className="space-y-0">
+            {Object.entries(scheduled).map(([id, job], i) => (
+              <motion.div
+                key={id}
+                initial={{ opacity: 0, x: -6 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: i * 0.04 }}
+                className="flex items-center justify-between py-2 border-b border-bone-1 last:border-0"
+              >
+                <span className="font-mono text-[11px] text-onyx">{job.label}</span>
+                <div className="text-right">
+                  <p className="font-mono text-[11px] text-onyx tabular-nums">{clockTime(job.next_run)}</p>
+                  <p className="font-mono text-[9px] text-onyx-dim">{relTime(job.next_run)}</p>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+
+        {/* Services Health */}
+        <div className="bg-white rounded-lg border border-bone-2 p-4">
+          <div className="flex items-center justify-between mb-3">
+            <p className="font-mono text-[9px] tracking-[0.18em] uppercase text-onyx-dim">Services</p>
             {health?.checked_at && (
               <p className="font-mono text-[9px] text-onyx-dim">
-                checked {fmtTime(health.checked_at)}
+                checked {clockTime(health.checked_at)}
               </p>
             )}
           </div>
-
           {health?.services && Object.keys(health.services).length > 0 ? (
-            <div className="grid grid-cols-2 gap-2">
-              {Object.entries(health.services).map(([key, svc], i) => (
-                <motion.div
-                  key={key}
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: i * 0.04 }}
-                  className={`flex items-start gap-2.5 px-3 py-2.5 rounded border ${STATUS_RING[svc.status] ?? STATUS_RING.warn}`}
-                >
-                  <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 mt-[3px] ${STATUS_DOT[svc.status] ?? STATUS_DOT.warn}`} />
-                  <div className="min-w-0">
-                    <p className={`font-mono text-[10px] font-semibold leading-tight ${STATUS_TEXT[svc.status] ?? STATUS_TEXT.warn}`}>
-                      {svc.label}
-                    </p>
-                    {svc.detail && (
-                      <p className="font-mono text-[9px] text-onyx-dim mt-0.5 leading-tight">
-                        {svc.detail}
-                      </p>
+            <div className="space-y-1">
+              {Object.entries(health.services).map(([key, svc], i) => {
+                const c = SVC_STATUS[svc.status] ?? SVC_STATUS.warn
+                return (
+                  <motion.div
+                    key={key}
+                    initial={{ opacity: 0, x: 6 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: i * 0.04 }}
+                    className="flex items-center gap-2.5 px-2.5 py-1.5 rounded bg-bone-1 group"
+                  >
+                    <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${c.dot}`} />
+                    <span className="font-mono text-[10px] text-onyx flex-1">{svc.label}</span>
+                    {svc.detail ? (
+                      <span className="font-mono text-[8px] text-onyx-dim truncate max-w-[100px]">{svc.detail}</span>
+                    ) : (
+                      <span className={`font-mono text-[8px] tracking-widest font-bold ${c.badge}`}>{c.label}</span>
                     )}
-                  </div>
-                </motion.div>
-              ))}
+                  </motion.div>
+                )
+              })}
             </div>
           ) : (
-            <p className="font-mono text-xs text-onyx-dim animate-pulse">Running health checks…</p>
+            <p className="font-mono text-xs text-onyx-dim animate-pulse">Running checks…</p>
           )}
-
-          <p className="font-mono text-[9px] text-onyx-dim mt-auto">
-            Health checks run every 60 s in the background
-          </p>
+          <p className="font-mono text-[8px] text-onyx-dim/50 mt-3">refreshes every 60 s</p>
         </div>
       </div>
     </div>
