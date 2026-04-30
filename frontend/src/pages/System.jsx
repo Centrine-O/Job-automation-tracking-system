@@ -24,9 +24,9 @@ const PIPELINE_STEPS = [
 ]
 
 const SVC = {
-  ok:    { dot: 'bg-emerald-500', card: 'bg-emerald-50 border-emerald-200',  name: 'text-emerald-800' },
-  warn:  { dot: 'bg-amber-400',   card: 'bg-amber-50  border-amber-200',    name: 'text-amber-800'   },
-  error: { dot: 'bg-red-500',     card: 'bg-red-50    border-red-200',      name: 'text-red-800'     },
+  ok:    { dot: 'bg-olive',       card: 'bg-white   border-bone-2',         name: 'text-onyx'        },
+  warn:  { dot: 'bg-onyx-dim',    card: 'bg-bone-1  border-bone-3',         name: 'text-onyx-dim'    },
+  error: { dot: 'bg-destructive', card: 'bg-bone-1  border-destructive',    name: 'text-destructive' },
 }
 
 function parseDate(iso) {
