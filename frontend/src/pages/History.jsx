@@ -3,7 +3,7 @@ import AppTable from '@/components/AppTable'
 import { getHistory } from '@/lib/api'
 
 const STATUS_FILTERS = ['all', 'applied', 'replied', 'needs_review']
-const METHOD_FILTERS = ['all', 'email', 'form']
+const METHOD_FILTERS = ['email', 'form']
 
 export default function History() {
   const [rows, setRows]         = useState([])
@@ -43,8 +43,8 @@ export default function History() {
         ))}
         <span className="w-px bg-bone-2 self-stretch mx-1" />
         {METHOD_FILTERS.map(m => (
-          <button key={m} onClick={() => setMethodF(m)} className={methodF === m ? btnActive : btnIdle}>
-            {m === 'all' ? 'Any Method' : m.charAt(0).toUpperCase() + m.slice(1)}
+          <button key={m} onClick={() => setMethodF(methodF === m ? 'all' : m)} className={methodF === m ? btnActive : btnIdle}>
+            {m.charAt(0).toUpperCase() + m.slice(1)}
           </button>
         ))}
       </div>
