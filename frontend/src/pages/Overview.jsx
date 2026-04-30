@@ -22,16 +22,17 @@ export default function Overview() {
       <h1 className="font-serif text-3xl font-bold text-onyx">Overview</h1>
 
       <div className="grid grid-cols-6 gap-3">
-        <StatCard label="Scraped"      value={stats.total_jobs} />
-        <StatCard label="Qualified"    value={stats.qualified}  accent />
+        <StatCard label="Scraped"       value={stats.total_jobs}    index={0} />
+        <StatCard label="Qualified"     value={stats.qualified}     index={1} accent />
         <StatCard
           label="Today"
           value={stats.applied_today}
           sub={`cap: ${stats.max_per_day}/day`}
+          index={2}
         />
-        <StatCard label="Total Applied"  value={stats.total_applied} />
-        <StatCard label="Review Queue"   value={stats.needs_review} />
-        <StatCard label="Replies"        value={stats.replied} />
+        <StatCard label="Total Applied" value={stats.total_applied} index={3} />
+        <StatCard label="Review Queue"  value={stats.needs_review}  index={4} />
+        <StatCard label="Replies"       value={stats.replied}       index={5} />
       </div>
 
       <div>
