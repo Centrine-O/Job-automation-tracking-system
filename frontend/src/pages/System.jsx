@@ -10,23 +10,23 @@ const STAGE_LABELS = {
   submitting:         'Submitting',
   detecting_replies:  'Detecting Replies',
   checking_followups: 'Checking Follow-ups',
-  sending_digest:     'Sending Digest',
+  sending_digest:     'Daily Digest',
 }
 
 const PIPELINE_STEPS = [
-  { key: 'scraping',           short: 'Scrape' },
-  { key: 'scoring',            short: 'Score' },
-  { key: 'generating_cvs',     short: 'CVs' },
-  { key: 'submitting',         short: 'Submit' },
-  { key: 'detecting_replies',  short: 'Replies' },
-  { key: 'checking_followups', short: 'Follow-up' },
-  { key: 'sending_digest',     short: 'Digest' },
+  { key: 'scraping',           label: 'Scrape' },
+  { key: 'scoring',            label: 'Score' },
+  { key: 'generating_cvs',     label: 'Gen CVs' },
+  { key: 'submitting',         label: 'Submit' },
+  { key: 'detecting_replies',  label: 'Replies' },
+  { key: 'checking_followups', label: 'Follow-up' },
+  { key: 'sending_digest',     label: 'Digest' },
 ]
 
-const SVC_STATUS = {
-  ok:    { dot: 'bg-emerald-400', badge: 'text-emerald-500', label: 'OK' },
-  warn:  { dot: 'bg-amber-400',   badge: 'text-amber-500',   label: 'WARN' },
-  error: { dot: 'bg-red-400',     badge: 'text-red-500',     label: 'ERR' },
+const SVC = {
+  ok:    { dot: 'bg-emerald-500', card: 'bg-emerald-50 border-emerald-200',  name: 'text-emerald-800' },
+  warn:  { dot: 'bg-amber-400',   card: 'bg-amber-50  border-amber-200',    name: 'text-amber-800'   },
+  error: { dot: 'bg-red-500',     card: 'bg-red-50    border-red-200',      name: 'text-red-800'     },
 }
 
 function parseDate(iso) {
@@ -60,12 +60,8 @@ export default function System() {
   const fetchAll = useCallback(async () => {
     try {
       const [s, h] = await Promise.all([getSystemStatus(), getSystemHealth()])
-      setStatus(s)
-      setHealth(h)
-      setError(null)
-    } catch (e) {
-      setError(e.message)
-    }
+      setStatus(s); setHealth(h); setError(null)
+    } catch (e) { setError(e.message) }
   }, [])
 
   useEffect(() => {
@@ -84,73 +80,70 @@ export default function System() {
     <div className="space-y-5">
       <div className="flex items-baseline justify-between">
         <h1 className="font-serif text-3xl font-bold text-onyx">System</h1>
-        <span className="font-mono text-[10px] text-onyx-dim tabular-nums">↻ 5s</span>
+        <span className="font-mono text-[10px] text-onyx-dim">↻ 5s</span>
       </div>
 
-      {/* ── Pipeline — dark card ── */}
-      <div className="bg-onyx rounded-lg overflow-hidden">
-        {/* Header row */}
-        <div className="flex items-center justify-between px-5 pt-4 pb-3 border-b border-white/5">
-          <p className="font-mono text-[9px] tracking-[0.18em] uppercase text-bone/40">Pipeline Monitor</p>
+      {/* ── Pipeline Monitor ── */}
+      <div className="bg-white rounded-lg border border-bone-2 p-5">
+        <div className="flex items-center justify-between mb-5">
+          <p className="font-mono text-[9px] tracking-[0.18em] uppercase text-onyx-dim">Pipeline Monitor</p>
           <div className="flex items-center gap-1.5">
-            <span className={`w-1.5 h-1.5 rounded-full ${isActive ? 'bg-olive animate-pulse' : 'bg-white/15'}`} />
-            <span className="font-mono text-[10px] text-bone/40">{isActive ? 'running' : 'idle'}</span>
+            <span className={`w-2 h-2 rounded-full ${isActive ? 'bg-olive animate-pulse' : 'bg-bone-2'}`} />
+            <span className="font-mono text-[10px] text-onyx-dim">{isActive ? 'running' : 'idle'}</span>
           </div>
         </div>
 
-        {/* Stage flow */}
-        <div className="px-5 py-4 flex items-center gap-px">
-          {PIPELINE_STEPS.map((step, i) => {
-            const active = pipeline.stage === step.key
-            return (
-              <div key={step.key} className="flex items-center gap-px flex-1 min-w-0">
-                <motion.div
-                  animate={active ? { opacity: [1, 0.55, 1] } : {}}
-                  transition={active ? { repeat: Infinity, duration: 1.4, ease: 'easeInOut' } : {}}
-                  className={`flex-1 py-2 text-center rounded-sm transition-all duration-300 ${
-                    active ? 'bg-olive' : 'bg-white/[0.04]'
-                  } ${i === 0 ? 'rounded-l' : ''} ${i === PIPELINE_STEPS.length - 1 ? 'rounded-r' : ''}`}
-                >
-                  <p className={`font-mono text-[9px] tracking-wide truncate px-1 ${
-                    active ? 'text-white font-semibold' : 'text-bone/25'
-                  }`}>
-                    {step.short}
-                  </p>
-                </motion.div>
-                {i < PIPELINE_STEPS.length - 1 && (
-                  <span className="text-white/8 font-mono text-[8px] select-none">│</span>
-                )}
-              </div>
-            )
-          })}
-        </div>
-
-        {/* Stage detail + last run */}
-        <div className="px-5 pb-4 flex items-end justify-between">
-          <div>
-            <p className="font-mono text-[9px] tracking-[0.15em] uppercase text-bone/30 mb-0.5">Current stage</p>
+        <div className="flex gap-8">
+          {/* Stage name */}
+          <div className="w-48 flex-shrink-0">
+            <p className="font-mono text-[9px] tracking-[0.15em] uppercase text-onyx-dim mb-1">Current Stage</p>
             <motion.p
               key={pipeline.stage}
-              initial={{ opacity: 0, y: 4 }}
+              initial={{ opacity: 0, y: 5 }}
               animate={{ opacity: 1, y: 0 }}
-              className={`font-serif text-2xl font-bold leading-none ${isActive ? 'text-olive' : 'text-bone/25'}`}
+              className={`font-serif text-2xl font-bold leading-tight ${isActive ? 'text-olive' : 'text-onyx-dim'}`}
             >
               {STAGE_LABELS[pipeline.stage] ?? pipeline.stage}
             </motion.p>
+            {pipeline.last_run_at && (
+              <p className="font-mono text-[10px] text-onyx-dim mt-2">
+                Last run {clockTime(pipeline.last_run_at)}
+              </p>
+            )}
           </div>
-          <div className="text-right">
-            <p className="font-mono text-[9px] tracking-[0.15em] uppercase text-bone/30 mb-0.5">Last completed</p>
-            <p className="font-mono text-xs text-bone/50">
-              {pipeline.last_stage
-                ? `${STAGE_LABELS[pipeline.last_stage] ?? pipeline.last_stage} · ${clockTime(pipeline.last_run_at)}`
-                : '—'}
-            </p>
+
+          {/* Stage pills */}
+          <div className="flex-1 flex items-center flex-wrap gap-2">
+            {PIPELINE_STEPS.map((step, i) => {
+              const active = pipeline.stage === step.key
+              return (
+                <motion.div
+                  key={step.key}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.05 }}
+                >
+                  <motion.span
+                    animate={active ? { opacity: [1, 0.55, 1] } : {}}
+                    transition={active ? { repeat: Infinity, duration: 1.4, ease: 'easeInOut' } : {}}
+                    className={`inline-flex items-center gap-1.5 font-mono text-[10px] px-3 py-1.5 rounded-full border transition-all duration-300 ${
+                      active
+                        ? 'bg-olive text-white border-olive shadow-sm'
+                        : 'bg-transparent text-onyx-dim border-bone-2 hover:border-onyx-dim'
+                    }`}
+                  >
+                    {active && <span className="w-1 h-1 rounded-full bg-white/70 flex-shrink-0" />}
+                    {step.label}
+                  </motion.span>
+                </motion.div>
+              )
+            })}
           </div>
         </div>
 
         {pipeline.error && (
-          <div className="mx-5 mb-4 rounded border border-red-500/25 bg-red-500/8 px-3 py-2">
-            <p className="font-mono text-[10px] text-red-400 break-all">{pipeline.error}</p>
+          <div className="mt-4 rounded border border-red-200 bg-red-50 px-3 py-2">
+            <p className="font-mono text-[10px] text-red-600">{pipeline.error}</p>
           </div>
         )}
       </div>
@@ -161,7 +154,7 @@ export default function System() {
         {/* Scheduled Jobs */}
         <div className="bg-white rounded-lg border border-bone-2 p-4">
           <p className="font-mono text-[9px] tracking-[0.18em] uppercase text-onyx-dim mb-3">Scheduled Jobs</p>
-          <div className="space-y-0">
+          <div>
             {Object.entries(scheduled).map(([id, job], i) => (
               <motion.div
                 key={id}
@@ -185,30 +178,28 @@ export default function System() {
           <div className="flex items-center justify-between mb-3">
             <p className="font-mono text-[9px] tracking-[0.18em] uppercase text-onyx-dim">Services</p>
             {health?.checked_at && (
-              <p className="font-mono text-[9px] text-onyx-dim">
-                checked {clockTime(health.checked_at)}
-              </p>
+              <p className="font-mono text-[9px] text-onyx-dim">checked {clockTime(health.checked_at)}</p>
             )}
           </div>
           {health?.services && Object.keys(health.services).length > 0 ? (
-            <div className="space-y-1">
+            <div className="grid grid-cols-2 gap-1.5">
               {Object.entries(health.services).map(([key, svc], i) => {
-                const c = SVC_STATUS[svc.status] ?? SVC_STATUS.warn
+                const c = SVC[svc.status] ?? SVC.warn
                 return (
                   <motion.div
                     key={key}
-                    initial={{ opacity: 0, x: 6 }}
-                    animate={{ opacity: 1, x: 0 }}
+                    initial={{ opacity: 0, scale: 0.96 }}
+                    animate={{ opacity: 1, scale: 1 }}
                     transition={{ delay: i * 0.04 }}
-                    className="flex items-center gap-2.5 px-2.5 py-1.5 rounded bg-bone-1 group"
+                    className={`flex items-start gap-2 px-3 py-2 rounded border ${c.card}`}
                   >
-                    <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${c.dot}`} />
-                    <span className="font-mono text-[10px] text-onyx flex-1">{svc.label}</span>
-                    {svc.detail ? (
-                      <span className="font-mono text-[8px] text-onyx-dim truncate max-w-[100px]">{svc.detail}</span>
-                    ) : (
-                      <span className={`font-mono text-[8px] tracking-widest font-bold ${c.badge}`}>{c.label}</span>
-                    )}
+                    <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 mt-[3px] ${c.dot}`} />
+                    <div className="min-w-0">
+                      <p className={`font-mono text-[10px] font-semibold leading-tight ${c.name}`}>{svc.label}</p>
+                      {svc.detail && (
+                        <p className="font-mono text-[8px] text-onyx-dim mt-0.5 leading-tight">{svc.detail}</p>
+                      )}
+                    </div>
                   </motion.div>
                 )
               })}
@@ -216,7 +207,7 @@ export default function System() {
           ) : (
             <p className="font-mono text-xs text-onyx-dim animate-pulse">Running checks…</p>
           )}
-          <p className="font-mono text-[8px] text-onyx-dim/50 mt-3">refreshes every 60 s</p>
+          <p className="font-mono text-[8px] text-onyx-dim/60 mt-3">refreshes every 60 s</p>
         </div>
       </div>
     </div>
