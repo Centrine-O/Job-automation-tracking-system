@@ -56,6 +56,7 @@ export default function Layout({ dryRun }) {
             )}
           </NavLink>
           <NavLink to="/history"    className={navLink}>History</NavLink>
+          <NavLink to="/system"     className={navLink}>System</NavLink>
         </nav>
 
         <div className="px-5 py-4 border-t border-white/10">

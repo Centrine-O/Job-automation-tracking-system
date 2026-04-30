@@ -10,3 +10,5 @@ export const getUnreadCount   = () => fetch('/api/unread-count').then(r => r.jso
 export const runNow           = () => fetch('/api/run-now', { method: 'POST' }).then(r => r.json())
 export const retryApply       = (id) => fetch(`/api/apply/${id}`, { method: 'POST' }).then(r => r.json())
 export const markApplied      = (id) => fetch(`/api/mark-applied/${id}`, { method: 'POST' }).then(r => r.json())
+export const getSystemStatus  = () => fetch('/api/system/status').then(r => r.json())
+export const getSystemHealth  = () => fetch('/api/system/health').then(r => r.json())

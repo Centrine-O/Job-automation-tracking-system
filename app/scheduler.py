@@ -36,14 +36,33 @@ logging.basicConfig(
 log = logging.getLogger("scheduler")
 
 
+_STAGE_KEYS = {
+    "Scraper": "scraping",
+    "Scorer": "scoring",
+    "CV Generator": "generating_cvs",
+    "Submitter": "submitting",
+    "Reply Detector": "detecting_replies",
+    "Follow-up Checker": "checking_followups",
+    "Daily Digest": "sending_digest",
+}
+
+
 def _run(label: str, fn):
     """Run a pipeline step, catch and log all exceptions."""
+    from app import state
+    stage = _STAGE_KEYS.get(label, label.lower().replace(" ", "_"))
+    state.set_stage(stage, datetime.utcnow().isoformat())
+    state.set_error(None)
     log.info(f"▶ {label} starting")
     try:
         fn()
         log.info(f"✓ {label} complete")
+        state.complete_stage(stage, datetime.utcnow().isoformat())
     except Exception:
-        log.error(f"✗ {label} FAILED:\n{traceback.format_exc()}")
+        err = traceback.format_exc()
+        log.error(f"✗ {label} FAILED:\n{err}")
+        state.set_error(f"{label} failed: {err.strip().splitlines()[-1]}")
+        state.set_stage("idle")
 
 
 # ── Pipeline steps ─────────────────────────────────────────────────────────────

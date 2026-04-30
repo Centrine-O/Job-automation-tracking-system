@@ -1,4 +1,5 @@
 """FastAPI dashboard — serves the UI. Scheduler is managed by app/scheduler.py."""
+import threading
 from datetime import datetime
 from pathlib import Path
 
@@ -11,15 +12,106 @@ from app.tracking.db import (
     get_connection, count_applications_today,
     get_notifications, count_unread_notifications, mark_notifications_read,
 )
+from app import state
 
 app = FastAPI(title="Job Automation Dashboard")
 
 _scheduler = build_scheduler()
 
 
+# ── Health check ───────────────────────────────────────────────────────────────
+
+def _check_health() -> dict:
+    """Probe each service and return a status dict. Never raises."""
+    services = {}
+
+    # SQLite
+    try:
+        conn = get_connection()
+        conn.execute("SELECT 1")
+        conn.close()
+        services["sqlite"] = {"status": "ok", "label": "SQLite Database"}
+    except Exception as exc:
+        services["sqlite"] = {"status": "error", "label": "SQLite Database", "detail": str(exc)[:80]}
+
+    # APScheduler
+    services["scheduler"] = {
+        "status": "ok" if _scheduler.running else "error",
+        "label": "APScheduler",
+        "detail": None if _scheduler.running else "Scheduler not running",
+    }
+
+    # Gmail OAuth token
+    try:
+        token = Path("data/gmail_token.json")
+        if token.exists():
+            from google.oauth2.credentials import Credentials
+            creds = Credentials.from_authorized_user_file(str(token))
+            if creds.valid:
+                services["gmail"] = {"status": "ok", "label": "Gmail OAuth"}
+            elif creds.expired and creds.refresh_token:
+                services["gmail"] = {"status": "warn", "label": "Gmail OAuth", "detail": "Token expired — will refresh on next use"}
+            else:
+                services["gmail"] = {"status": "error", "label": "Gmail OAuth", "detail": "Re-authentication required"}
+        else:
+            services["gmail"] = {"status": "warn", "label": "Gmail OAuth", "detail": "No token — run OAuth flow"}
+    except Exception as exc:
+        services["gmail"] = {"status": "error", "label": "Gmail OAuth", "detail": str(exc)[:80]}
+
+    # Playwright / Chromium
+    try:
+        import playwright  # noqa: F401
+        pw_cache = Path.home() / ".cache" / "ms-playwright"
+        chromium_ok = pw_cache.exists() and any(pw_cache.glob("chromium-*"))
+        if chromium_ok:
+            services["playwright"] = {"status": "ok", "label": "Playwright / Chromium"}
+        else:
+            services["playwright"] = {"status": "warn", "label": "Playwright / Chromium", "detail": "Chromium not installed — run: playwright install chromium"}
+    except ImportError:
+        services["playwright"] = {"status": "error", "label": "Playwright / Chromium", "detail": "Package not installed"}
+
+    # API keys (presence check only — live calls would burn credits)
+    api_keys = [
+        ("gemini",      settings.gemini_api_key,      "Gemini API"),
+        ("groq",        settings.groq_api_key,         "Groq API"),
+        ("cohere",      settings.cohere_api_key,        "Cohere API"),
+        ("openrouter",  settings.openrouter_api_key,    "OpenRouter API"),
+        ("serpapi",     settings.serpapi_key,           "SerpAPI"),
+    ]
+    for key, val, label in api_keys:
+        services[key] = {
+            "status": "ok" if val else "warn",
+            "label": label,
+            "detail": None if val else "No API key configured",
+        }
+
+    return services
+
+
+def _refresh_health():
+    """Update the shared health cache. Called on a background schedule."""
+    try:
+        services = _check_health()
+        state.health_cache.update({
+            "checked_at": datetime.utcnow().isoformat(),
+            "services": services,
+        })
+    except Exception:
+        pass
+
+
 @app.on_event("startup")
 def startup():
     _scheduler.start()
+    # Health-check job: every 60 s, fire immediately on startup
+    from apscheduler.triggers.interval import IntervalTrigger
+    _scheduler.add_job(
+        _refresh_health,
+        IntervalTrigger(seconds=60),
+        id="health_check",
+        replace_existing=True,
+    )
+    threading.Thread(target=_refresh_health, daemon=True).start()
 
 
 @app.on_event("shutdown")
@@ -194,6 +286,40 @@ def api_re_trigger(job_id: int):
 @app.post("/api/mark-applied/{job_id}")
 def api_mark_applied(job_id: int):
     return mark_applied(job_id)
+
+
+@app.get("/api/system/status")
+def api_system_status():
+    scheduled = {}
+    job_labels = {
+        "scrape":         "Scraper",
+        "score":          "Scorer",
+        "generate_cvs":   "CV Generator",
+        "submit":         "Submitter",
+        "detect_replies": "Reply Detector",
+        "followups":      "Follow-up Checker",
+        "daily_digest":   "Daily Digest",
+    }
+    for job_id, label in job_labels.items():
+        job = _scheduler.get_job(job_id)
+        if job and job.next_run_time:
+            scheduled[job_id] = {
+                "label": label,
+                "next_run": job.next_run_time.isoformat(),
+            }
+    return {
+        "pipeline": state.snapshot(),
+        "scheduled": scheduled,
+        "now": datetime.utcnow().isoformat(),
+    }
+
+
+@app.get("/api/system/health")
+def api_system_health():
+    return {
+        "checked_at": state.health_cache.get("checked_at"),
+        "services": state.health_cache.get("services", {}),
+    }
 
 
 # Must be registered last — serves frontend/dist/ at "/" after all /api/* routes

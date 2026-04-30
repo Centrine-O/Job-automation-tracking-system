@@ -7,6 +7,7 @@ import Layout   from '@/components/Layout'
 import Overview from '@/pages/Overview'
 import Queue    from '@/pages/Queue'
 import History  from '@/pages/History'
+import System   from '@/pages/System'
 import { getStats } from '@/lib/api'
 
 function App() {
@@ -23,6 +24,7 @@ function App() {
           <Route index         element={<Overview />} />
           <Route path="queue"   element={<Queue />} />
           <Route path="history" element={<History />} />
+          <Route path="system"  element={<System />} />
         </Route>
       </Routes>
     </BrowserRouter>
