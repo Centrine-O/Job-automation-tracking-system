@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import AppTable from '@/components/AppTable'
 import { getHistory } from '@/lib/api'
 
-const STATUS_FILTERS = ['all', 'applied', 'replied', 'needs_review']
+const STATUS_FILTERS = ['applied', 'replied', 'needs_review']
 const METHOD_FILTERS = ['email', 'form']
 
 export default function History() {
@@ -37,8 +37,8 @@ export default function History() {
 
       <div className="flex flex-wrap gap-2">
         {STATUS_FILTERS.map(s => (
-          <button key={s} onClick={() => setStatusF(s)} className={statusF === s ? btnActive : btnIdle}>
-            {s === 'all' ? 'All' : s.replace('_', ' ')}
+          <button key={s} onClick={() => setStatusF(statusF === s ? 'all' : s)} className={statusF === s ? btnActive : btnIdle}>
+            {s.replace('_', ' ')}
           </button>
         ))}
         <span className="w-px bg-bone-2 self-stretch mx-1" />
