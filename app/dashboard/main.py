@@ -2,9 +2,8 @@
 from datetime import datetime
 from pathlib import Path
 
-from fastapi import FastAPI, Request, HTTPException
-from fastapi.responses import HTMLResponse, JSONResponse
-from fastapi.templating import Jinja2Templates
+from fastapi import FastAPI, HTTPException
+from fastapi.responses import JSONResponse
 
 from app.config import settings
 from app.scheduler import build_scheduler
@@ -14,9 +13,6 @@ from app.tracking.db import (
 )
 
 app = FastAPI(title="Job Automation Dashboard")
-templates = Jinja2Templates(directory="app/dashboard/templates")
-
-SCREENSHOTS_DIR = Path("data/screenshots")
 
 _scheduler = build_scheduler()
 
@@ -32,87 +28,6 @@ def shutdown():
 
 
 # ── Routes ─────────────────────────────────────────────────────────────────────
-
-@app.get("/", response_class=HTMLResponse)
-def dashboard(request: Request):
-    conn = get_connection()
-    total_jobs = conn.execute("SELECT COUNT(*) as c FROM jobs").fetchone()["c"]
-    qualified = conn.execute("SELECT COUNT(*) as c FROM jobs WHERE status='qualified'").fetchone()["c"]
-    applied_today = count_applications_today()
-    total_applied = conn.execute("SELECT COUNT(*) as c FROM applications WHERE status='applied'").fetchone()["c"]
-    needs_review = conn.execute("SELECT COUNT(*) as c FROM jobs WHERE status='needs_review'").fetchone()["c"]
-    replied = conn.execute("SELECT COUNT(*) as c FROM applications WHERE status='replied'").fetchone()["c"]
-
-    recent = conn.execute("""
-        SELECT a.id, a.submitted_at, a.submission_method, a.status, a.ats_score,
-               j.title, j.company, j.apply_method
-        FROM applications a JOIN jobs j ON j.id = a.job_id
-        ORDER BY a.submitted_at DESC LIMIT 10
-    """).fetchall()
-    conn.close()
-
-    return templates.TemplateResponse(request, "dashboard.html", {
-        "total_jobs": total_jobs,
-        "qualified": qualified,
-        "applied_today": applied_today,
-        "max_per_day": settings.max_applications_per_day,
-        "total_applied": total_applied,
-        "needs_review": needs_review,
-        "replied": replied,
-        "recent": [dict(r) for r in recent],
-        "dry_run": settings.dry_run,
-        "now": datetime.now().strftime("%Y-%m-%d %H:%M"),
-        "unread": count_unread_notifications(),
-    })
-
-
-@app.get("/queue", response_class=HTMLResponse)
-def review_queue(request: Request):
-    conn = get_connection()
-    rows = conn.execute("""
-        SELECT j.id, j.title, j.company, j.apply_url, j.skill_score, j.hire_score,
-               a.notes, a.submitted_at,
-               (SELECT GROUP_CONCAT(id) FROM applications WHERE job_id = j.id) as app_ids
-        FROM jobs j
-        LEFT JOIN applications a ON a.job_id = j.id AND a.status = 'needs_review'
-        WHERE j.status = 'needs_review'
-        ORDER BY j.skill_score DESC
-    """).fetchall()
-    conn.close()
-    return templates.TemplateResponse(request, "queue.html", {
-        "jobs": [dict(r) for r in rows],
-        "unread": count_unread_notifications(),
-    })
-
-
-@app.get("/history", response_class=HTMLResponse)
-def history(request: Request):
-    conn = get_connection()
-    rows = conn.execute("""
-        SELECT a.id, a.submitted_at, a.submission_method, a.status, a.ats_score,
-               a.cv_path, a.notes,
-               j.id as job_id, j.title, j.company, j.apply_url, j.apply_method,
-               j.skill_score, j.hire_score
-        FROM applications a JOIN jobs j ON j.id = a.job_id
-        ORDER BY a.submitted_at DESC
-    """).fetchall()
-    conn.close()
-
-    # Attach screenshot paths
-    apps = []
-    for r in rows:
-        row = dict(r)
-        job_slug = f"{row['job_id']}_"
-        row["screenshots"] = [
-            str(p) for p in SCREENSHOTS_DIR.glob(f"*{job_slug}*")
-        ] if SCREENSHOTS_DIR.exists() else []
-        apps.append(row)
-
-    return templates.TemplateResponse(request, "history.html", {
-        "applications": apps,
-        "unread": count_unread_notifications(),
-    })
-
 
 @app.post("/apply/{job_id}")
 def re_trigger(job_id: int):
