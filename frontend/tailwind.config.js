@@ -47,7 +47,7 @@ export default {
         md: 'var(--radius-md)',
       },
       fontFamily: {
-        serif: ['"Crimson Text"', 'Georgia', 'serif'],
+        serif: ['"Mona Sans"', 'system-ui', 'sans-serif'],
         mono:  ['"IBM Plex Mono"', 'Menlo', 'monospace'],
       },
     },

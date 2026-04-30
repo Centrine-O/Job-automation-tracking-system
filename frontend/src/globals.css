@@ -2,6 +2,14 @@
 @tailwind components;
 @tailwind utilities;
 
+@font-face {
+  font-family: 'Mona Sans';
+  src: url('/fonts/MonaSans.woff2') format('woff2-variations');
+  font-weight: 300 900;
+  font-style: normal;
+  font-display: swap;
+}
+
 @layer base {
   :root {
     --background: 46 20% 84%;
@@ -34,7 +42,7 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-family: 'Crimson Text', Georgia, serif;
+    font-family: 'Mona Sans', system-ui, sans-serif;
     font-weight: 400;
     -webkit-font-smoothing: antialiased;
   }
