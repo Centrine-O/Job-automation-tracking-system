@@ -43,7 +43,10 @@
   body {
     @apply bg-background text-foreground;
     font-family: 'Mona Sans', system-ui, sans-serif;
-    font-weight: 400;
+    font-weight: 450;
     -webkit-font-smoothing: antialiased;
+  }
+  .font-mono {
+    font-weight: 500;
   }
 }
