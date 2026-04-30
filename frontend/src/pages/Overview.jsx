@@ -21,7 +21,7 @@ export default function Overview() {
     <div className="space-y-6">
       <h1 className="font-serif text-3xl font-bold text-onyx">Overview</h1>
 
-      <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-6 gap-3">
         <StatCard label="Scraped"      value={stats.total_jobs} />
         <StatCard label="Qualified"    value={stats.qualified}  accent />
         <StatCard
