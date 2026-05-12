@@ -37,13 +37,14 @@ log = logging.getLogger("scheduler")
 
 
 _STAGE_KEYS = {
-    "Scraper": "scraping",
-    "Scorer": "scoring",
-    "CV Generator": "generating_cvs",
-    "Submitter": "submitting",
-    "Reply Detector": "detecting_replies",
+    "Scraper":           "scraping",
+    "Scorer":            "scoring",
+    "CV Generator":      "generating_cvs",
+    "Submitter":         "submitting",
+    "Reply Detector":    "detecting_replies",
     "Follow-up Checker": "checking_followups",
-    "Daily Digest": "sending_digest",
+    "Daily Digest":      "sending_digest",
+    "Ghosted Detector":  "marking_ghosted",
 }
 
 _INTERVIEW_KEYWORDS = {"interview", "schedule", "call", "meet", "availability", "discuss"}
@@ -260,6 +261,36 @@ def job_check_followups():
         conn.close()
 
 
+def job_mark_ghosted():
+    """Mark applications with no reply after 45 days as ghosted."""
+    from app.tracking.db import get_connection
+    from app.notifications import telegram
+
+    conn = get_connection()
+    rows = conn.execute("""
+        SELECT a.id, j.title, j.company
+        FROM applications a
+        JOIN jobs j ON j.id = a.job_id
+        WHERE a.status = 'applied'
+          AND julianday('now') - julianday(a.submitted_at) >= 45
+    """).fetchall()
+
+    count = 0
+    for row in rows:
+        conn.execute(
+            "UPDATE applications SET status='ghosted', ghosted_at=? WHERE id=?",
+            (datetime.utcnow().isoformat(), row["id"])
+        )
+        log.info(f"  Ghosted: [{row['id']}] {row['title']} @ {row['company']}")
+        telegram.send(f"👻 Ghosted — {row['company']} · {row['title']} (45 days, no reply)")
+        count += 1
+
+    conn.commit()
+    conn.close()
+    if count:
+        log.info(f"  Ghosted {count} application(s)")
+
+
 def job_daily_digest():
     """Send a daily summary email with today's application stats."""
     import sqlite3
@@ -390,6 +421,12 @@ def build_scheduler() -> BackgroundScheduler:
         lambda: _run("Daily Digest", job_daily_digest),
         CronTrigger(hour=0, minute=0),
         id="daily_digest", replace_existing=True,
+    )
+    # Mark ghosted at Day 45 — runs every 6h at :30
+    scheduler.add_job(
+        lambda: _run("Ghosted Detector", job_mark_ghosted),
+        CronTrigger(hour="0,6,12,18", minute=30),
+        id="mark_ghosted", replace_existing=True,
     )
 
     return scheduler
