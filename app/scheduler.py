@@ -258,6 +258,15 @@ def job_daily_digest():
     except Exception:
         log.error(f"  Daily digest email failed:\n{traceback.format_exc()}")
 
+    from app.notifications import telegram
+    telegram.send(
+        f"📊 Daily Report — {today}\n"
+        f"Applied today: {applied_today}\n"
+        f"Total replies: {replied}\n"
+        f"Needs review: {needs_review}\n"
+        f"Still qualified: {total_qualified}"
+    )
+
 
 # ── Scheduler factory ──────────────────────────────────────────────────────────
 
