@@ -185,8 +185,33 @@ def job_detect_replies():
 
 
 def job_check_followups():
-    """Flag applications that are past their 21-day or 30-day follow-up window."""
+    """Send follow-up emails at Day 21 and Day 30 for email-method applications."""
     from app.tracking.db import get_applications_due_followup, get_connection
+    from app.notifications import telegram
+
+    _SUBJECTS = {
+        21: "Follow-up: {title} Application — Centrine Ong'aria",
+        30: "Second Follow-up: {title} Application — Centrine Ong'aria",
+    }
+    _BODIES = {
+        21: (
+            "Dear Hiring Team,\n\n"
+            "I hope this message finds you well. I wanted to follow up on my application "
+            "for the {title} position at {company}, submitted on {date}.\n\n"
+            "I remain very interested in this opportunity and am confident my skills in "
+            "software engineering, data analysis, and automation align well with your team's needs.\n\n"
+            "Please don't hesitate to reach out if you need additional information.\n\n"
+            "Best regards,\nCentrine Ong'aria\ncentyanita@gmail.com | +254 712 382 443"
+        ),
+        30: (
+            "Dear Hiring Team,\n\n"
+            "I'm reaching out once more regarding my application for the {title} role "
+            "at {company}, submitted on {date}.\n\n"
+            "I understand you're reviewing many candidates and appreciate your time. "
+            "I remain enthusiastic about this position and believe my background would be a strong fit.\n\n"
+            "Best regards,\nCentrine Ong'aria\ncentyanita@gmail.com | +254 712 382 443"
+        ),
+    }
 
     for day in (21, 30):
         due = get_applications_due_followup(day)
@@ -194,15 +219,43 @@ def job_check_followups():
             continue
         col = "follow_up_21_at" if day == 21 else "follow_up_30_at"
         conn = get_connection()
+
         for app in due:
-            conn.execute(
-                f"UPDATE applications SET {col}=? WHERE id=?",
-                (datetime.utcnow().isoformat(), app["id"])
-            )
-            log.info(
-                f"  Follow-up due ({day}d): [{app['id']}] "
-                f"{app.get('title', '?')} @ {app.get('company', '?')}"
-            )
+            title   = app.get("title", "the role")
+            company = app.get("company", "your company")
+            date    = (app.get("submitted_at") or "")[:10]
+            method  = app.get("submission_method", "")
+            apply_url = app.get("apply_url") or ""
+
+            if method == "email" and apply_url:
+                to_email = apply_url.replace("mailto:", "").strip()
+                if "@" not in to_email:
+                    log.info(f"  Follow-up ({day}d): unparseable email for [{app['id']}] — marking done")
+                    conn.execute(f"UPDATE applications SET {col}=? WHERE id=?",
+                                 (datetime.utcnow().isoformat(), app["id"]))
+                    continue
+
+                subject = _SUBJECTS[day].format(title=title)
+                body    = _BODIES[day].format(title=title, company=company, date=date)
+
+                try:
+                    from app.submission.email_sender import _get_service, _build_message
+                    service = _get_service()
+                    message = _build_message(to_email, subject, body, [])
+                    service.users().messages().send(userId="me", body=message).execute()
+                    conn.execute(f"UPDATE applications SET {col}=? WHERE id=?",
+                                 (datetime.utcnow().isoformat(), app["id"]))
+                    log.info(f"  Follow-up email sent ({day}d): [{app['id']}] {title} @ {company}")
+                    telegram.send(f"📧 Day-{day} follow-up sent → {company} · {title}")
+                except Exception:
+                    log.error(f"  Follow-up email FAILED ({day}d): [{app['id']}]\n{traceback.format_exc()}")
+                    # Do NOT set the timestamp — next run will retry
+            else:
+                # Form submission — no email to send, just mark as checked
+                conn.execute(f"UPDATE applications SET {col}=? WHERE id=?",
+                             (datetime.utcnow().isoformat(), app["id"]))
+                log.info(f"  Follow-up ({day}d, form/skip): [{app['id']}] {title} @ {company}")
+
         conn.commit()
         conn.close()
 
