@@ -10,6 +10,7 @@ const STAGE_LABELS = {
   submitting:         'Submitting',
   detecting_replies:  'Detecting Replies',
   checking_followups: 'Checking Follow-ups',
+  marking_ghosted:    'Marking Ghosted',
   sending_digest:     'Daily Digest',
 }
 
@@ -20,6 +21,7 @@ const PIPELINE_STEPS = [
   { key: 'submitting',         label: 'Submit' },
   { key: 'detecting_replies',  label: 'Replies' },
   { key: 'checking_followups', label: 'Follow-up' },
+  { key: 'marking_ghosted',    label: 'Ghosted' },
   { key: 'sending_digest',     label: 'Digest' },
 ]
 
