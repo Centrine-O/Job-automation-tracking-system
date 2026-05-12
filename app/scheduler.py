@@ -46,6 +46,8 @@ _STAGE_KEYS = {
     "Daily Digest": "sending_digest",
 }
 
+_INTERVIEW_KEYWORDS = {"interview", "schedule", "call", "meet", "availability", "discuss"}
+
 
 def _run(label: str, fn):
     """Run a pipeline step, catch and log all exceptions."""
@@ -126,6 +128,8 @@ def job_submit():
 def job_detect_replies():
     """Scan Gmail for replies to sent applications and update DB status."""
     import sqlite3
+    from app.notifications import telegram
+
     conn = sqlite3.connect("data/jobs.db")
     conn.row_factory = sqlite3.Row
     rows = conn.execute("""
@@ -150,15 +154,34 @@ def job_detect_replies():
     replies = detect_replies(msg_ids)
     for reply in replies:
         app_id = app_map.get(reply["original_message_id"])
-        if app_id:
-            conn = sqlite3.connect("data/jobs.db")
-            conn.execute(
-                "UPDATE applications SET status='replied', notes=? WHERE id=?",
-                (f"Reply: {reply['snippet'][:200]}", app_id)
+        if not app_id:
+            continue
+
+        snippet = reply["snippet"]
+        conn = sqlite3.connect("data/jobs.db")
+        conn.row_factory = sqlite3.Row
+        conn.execute(
+            "UPDATE applications SET status='replied', notes=? WHERE id=?",
+            (f"Reply: {snippet[:200]}", app_id)
+        )
+        conn.commit()
+
+        job_row = conn.execute("""
+            SELECT j.title, j.company FROM applications a
+            JOIN jobs j ON j.id = a.job_id WHERE a.id = ?
+        """, (app_id,)).fetchone()
+        conn.close()
+
+        log.info(f"  Reply detected for application {app_id}: {snippet[:60]}")
+
+        if any(kw in snippet.lower() for kw in _INTERVIEW_KEYWORDS):
+            title   = job_row["title"]   if job_row else "Unknown role"
+            company = job_row["company"] if job_row else "Unknown company"
+            telegram.alert(
+                f"Interview invite — {company} · {title}\n"
+                f'"{snippet[:150]}"'
             )
-            conn.commit()
-            conn.close()
-            log.info(f"  Reply detected for application {app_id}: {reply['snippet'][:60]}")
+            log.info(f"  Interview keyword detected — Telegram alert sent")
 
 
 def job_check_followups():
