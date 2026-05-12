@@ -50,6 +50,7 @@ _STAGE_KEYS = {
 def _run(label: str, fn):
     """Run a pipeline step, catch and log all exceptions."""
     from app import state
+    from app.notifications import telegram
     stage = _STAGE_KEYS.get(label, label.lower().replace(" ", "_"))
     state.set_stage(stage, datetime.utcnow().isoformat())
     state.set_error(None)
@@ -61,8 +62,10 @@ def _run(label: str, fn):
     except Exception:
         err = traceback.format_exc()
         log.error(f"✗ {label} FAILED:\n{err}")
-        state.set_error(f"{label} failed: {err.strip().splitlines()[-1]}")
+        last_line = err.strip().splitlines()[-1]
+        state.set_error(f"{label} failed: {last_line}")
         state.set_stage("idle")
+        telegram.alert(f"{label} failed: {last_line}")
 
 
 # ── Pipeline steps ─────────────────────────────────────────────────────────────
