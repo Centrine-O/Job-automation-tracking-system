@@ -7,9 +7,11 @@ Schedule (EAT = UTC+3):
   09:30  → Submit applications (respects daily cap + dry_run)
   Every 6h → Detect Gmail replies, update application statuses
   Every 6h → Check follow-up due dates (21-day / 30-day)
+  Every 6h → Mark 45-day no-reply applications as ghosted
   00:00  → Send daily digest email
 """
 import logging
+import re
 import traceback
 from datetime import datetime, date
 from pathlib import Path
@@ -47,7 +49,7 @@ _STAGE_KEYS = {
     "Ghosted Detector":  "marking_ghosted",
 }
 
-_INTERVIEW_KEYWORDS = {"interview", "schedule", "call", "meet", "availability", "discuss"}
+_INTERVIEW_RE = re.compile(r'\b(interview|schedule|call|meet|availability|discuss)\b', re.IGNORECASE)
 
 
 def _run(label: str, fn):
@@ -175,7 +177,7 @@ def job_detect_replies():
 
         log.info(f"  Reply detected for application {app_id}: {snippet[:60]}")
 
-        if any(kw in snippet.lower() for kw in _INTERVIEW_KEYWORDS):
+        if _INTERVIEW_RE.search(snippet):
             title   = job_row["title"]   if job_row else "Unknown role"
             company = job_row["company"] if job_row else "Unknown company"
             telegram.alert(
@@ -236,6 +238,12 @@ def job_check_followups():
                                  (datetime.utcnow().isoformat(), app["id"]))
                     continue
 
+                if settings.dry_run:
+                    log.info(f"  [dry_run] Would send Day-{day} follow-up to {to_email} for [{app['id']}] {title} @ {company}")
+                    conn.execute(f"UPDATE applications SET {col}=? WHERE id=?",
+                                 (datetime.utcnow().isoformat(), app["id"]))
+                    continue
+
                 subject = _SUBJECTS[day].format(title=title)
                 body    = _BODIES[day].format(title=title, company=company, date=date)
 
@@ -282,13 +290,13 @@ def job_mark_ghosted():
             (datetime.utcnow().isoformat(), row["id"])
         )
         log.info(f"  Ghosted: [{row['id']}] {row['title']} @ {row['company']}")
-        telegram.send(f"👻 Ghosted — {row['company']} · {row['title']} (45 days, no reply)")
         count += 1
 
     conn.commit()
     conn.close()
     if count:
         log.info(f"  Ghosted {count} application(s)")
+        telegram.send(f"👻 Ghosted {count} application(s) — no reply after 45 days")
 
 
 def job_daily_digest():
