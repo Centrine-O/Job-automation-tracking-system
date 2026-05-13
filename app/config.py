@@ -26,6 +26,10 @@ class Settings(BaseSettings):
     dashboard_password: str = "changeme123"
     dashboard_secret_key: str = "replace-this-with-a-random-string"
 
+    # Telegram notifications
+    telegram_bot_token: str = ""
+    telegram_chat_id: str = ""
+
     # Mode
     dry_run: bool = True
 
