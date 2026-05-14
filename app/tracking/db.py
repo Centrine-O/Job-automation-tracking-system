@@ -131,6 +131,14 @@ def get_qualified_jobs():
     return [dict(r) for r in rows]
 
 
+def dismiss_job(job_id: int) -> None:
+    """Mark a job as dismissed — removes it from the Queue."""
+    conn = get_connection()
+    conn.execute("UPDATE jobs SET status='dismissed' WHERE id=?", (job_id,))
+    conn.commit()
+    conn.close()
+
+
 # ── APPLICATIONS ───────────────────────────────────────
 
 def insert_application(job_id, cv_path, cover_letter_path,
@@ -150,6 +158,19 @@ def insert_application(job_id, cv_path, cover_letter_path,
     )
     conn.commit()
     app_id = cursor.lastrowid
+    conn.close()
+    return app_id
+
+
+def create_manual_application(job_id: int) -> int:
+    """Record that the user manually applied to a job. Returns the new application id."""
+    conn = get_connection()
+    cursor = conn.execute(
+        "INSERT INTO applications (job_id, submitted_at, status) VALUES (?, ?, 'applied')",
+        (job_id, datetime.utcnow().isoformat()),
+    )
+    app_id = cursor.lastrowid
+    conn.commit()
     conn.close()
     return app_id
 
