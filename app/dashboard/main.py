@@ -41,22 +41,6 @@ def _check_health() -> dict:
         "detail": None if _scheduler.running else "Scheduler not running",
     }
 
-    # Gmail OAuth token
-    try:
-        token = Path("data/gmail_token.json")
-        if token.exists():
-            from google.oauth2.credentials import Credentials
-            creds = Credentials.from_authorized_user_file(str(token))
-            if creds.valid:
-                services["gmail"] = {"status": "ok", "label": "Gmail OAuth"}
-            elif creds.expired and creds.refresh_token:
-                services["gmail"] = {"status": "warn", "label": "Gmail OAuth", "detail": "Token expired — will refresh on next use"}
-            else:
-                services["gmail"] = {"status": "error", "label": "Gmail OAuth", "detail": "Re-authentication required"}
-        else:
-            services["gmail"] = {"status": "warn", "label": "Gmail OAuth", "detail": "No token — run OAuth flow"}
-    except Exception as exc:
-        services["gmail"] = {"status": "error", "label": "Gmail OAuth", "detail": str(exc)[:80]}
 
     # Playwright / Chromium
     try:
@@ -257,20 +241,18 @@ def mark_applied(job_id: int):
 
 @app.post("/run-now")
 def run_now():
-    """Manually trigger the full pipeline immediately."""
+    """Manually trigger the pipeline immediately."""
     import threading
-    from app.scheduler import job_scrape, job_score, job_generate_cvs, job_submit
+    from app.scheduler import job_scrape, job_score
 
     def _run_all():
         from app.scheduler import _run
         _run("Scraper", job_scrape)
         _run("Scorer", job_score)
-        _run("CV Generator", job_generate_cvs)
-        _run("Submitter", job_submit)
 
     t = threading.Thread(target=_run_all, daemon=True)
     t.start()
-    return {"ok": True, "message": "Full pipeline triggered"}
+    return {"ok": True, "message": "Pipeline triggered"}
 
 
 @app.post("/api/run-now")
