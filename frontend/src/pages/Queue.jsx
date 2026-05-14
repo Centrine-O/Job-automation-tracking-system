@@ -2,10 +2,14 @@ import { useState, useEffect } from 'react'
 import { getQueue, dismissJob, applyJob } from '@/lib/api'
 
 export default function Queue() {
-  const [jobs, setJobs]         = useState([])
-  const [selected, setSelected] = useState(null)
-  const [loading, setLoading]   = useState(true)
-  const [error, setError]       = useState(null)
+  const [jobs, setJobs]             = useState([])
+  const [selectedId, setSelectedId] = useState(null)
+  const [loading, setLoading]       = useState(true)
+  const [error, setError]           = useState(null)
+  const [pending, setPending]       = useState(false)
+  const [actionError, setActionError] = useState(null)
+
+  const selected = jobs.find(j => j.id === selectedId) ?? null
 
   useEffect(() => {
     getQueue()
@@ -15,17 +19,35 @@ export default function Queue() {
 
   function removeJob(id) {
     setJobs(prev => prev.filter(j => j.id !== id))
-    if (selected?.id === id) setSelected(null)
+    if (selectedId === id) setSelectedId(null)
   }
 
   async function handleDismiss(job) {
-    await dismissJob(job.id)
-    removeJob(job.id)
+    if (pending) return
+    setPending(true)
+    setActionError(null)
+    try {
+      await dismissJob(job.id)
+      removeJob(job.id)
+    } catch (e) {
+      setActionError('Failed to dismiss job. Please try again.')
+    } finally {
+      setPending(false)
+    }
   }
 
   async function handleApply(job) {
-    await applyJob(job.id)
-    removeJob(job.id)
+    if (pending) return
+    setPending(true)
+    setActionError(null)
+    try {
+      await applyJob(job.id)
+      removeJob(job.id)
+    } catch (e) {
+      setActionError('Failed to record application. Please try again.')
+    } finally {
+      setPending(false)
+    }
   }
 
   if (loading) return <p className="font-mono text-onyx-dim text-sm animate-pulse">Loading…</p>
@@ -51,9 +73,9 @@ export default function Queue() {
             {jobs.map(job => (
               <button
                 key={job.id}
-                onClick={() => setSelected(job)}
+                onClick={() => setSelectedId(job.id)}
                 className={`w-full text-left rounded-lg border px-4 py-3 transition-colors ${
-                  selected?.id === job.id
+                  selectedId === job.id
                     ? 'border-olive bg-olive/5'
                     : 'border-bone-2 bg-white hover:border-bone-3'
                 }`}
@@ -96,7 +118,7 @@ export default function Queue() {
                 {selected.jd_text && (
                   <div>
                     <p className="font-mono text-[10px] text-onyx-dim/60 uppercase tracking-widest mb-2">Description</p>
-                    <p className="font-mono text-xs text-onyx-dim leading-relaxed line-clamp-6">
+                    <p className="font-mono text-xs text-onyx-dim leading-relaxed">
                       {selected.jd_text.slice(0, 400)}{selected.jd_text.length > 400 ? '…' : ''}
                     </p>
                   </div>
@@ -108,24 +130,32 @@ export default function Queue() {
                       href={selected.apply_url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="font-mono text-xs bg-olive text-bone px-4 py-2 rounded border border-olive hover:bg-olive/90 transition-colors"
+                      className="font-mono text-xs bg-olive text-bone px-4 py-2 rounded border border-olive hover:bg-olive/90 transition-colors disabled:opacity-50 disabled:pointer-events-none"
+                      aria-disabled={pending}
+                      tabIndex={pending ? -1 : undefined}
                     >
                       Open Job ↗
                     </a>
                   )}
                   <button
                     onClick={() => handleApply(selected)}
-                    className="font-mono text-xs bg-onyx text-bone px-4 py-2 rounded border border-onyx hover:bg-onyx/90 transition-colors"
+                    disabled={pending}
+                    className="font-mono text-xs bg-onyx text-bone px-4 py-2 rounded border border-onyx hover:bg-onyx/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Mark Applied ✓
                   </button>
                   <button
                     onClick={() => handleDismiss(selected)}
-                    className="font-mono text-xs text-onyx-dim px-4 py-2 rounded border border-bone-2 hover:border-onyx-dim hover:text-onyx transition-colors"
+                    disabled={pending}
+                    className="font-mono text-xs text-onyx-dim px-4 py-2 rounded border border-bone-2 hover:border-onyx-dim hover:text-onyx transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Dismiss
                   </button>
                 </div>
+
+                {actionError && (
+                  <p className="font-mono text-xs text-red-600">{actionError}</p>
+                )}
               </div>
             ) : (
               <div className="bg-white rounded-lg border border-bone-2 p-12 text-center h-full flex items-center justify-center">
