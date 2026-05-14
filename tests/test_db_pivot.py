@@ -77,3 +77,15 @@ def test_update_application_status(db):
     row = conn.execute("SELECT status FROM applications WHERE id=?", (app_id,)).fetchone()
     conn.close()
     assert row["status"] == "replied"
+
+
+def test_applied_job_removed_from_queue(db):
+    job_id = db.insert_job(source="test", title="Dev C", company="Corp", jd_hash="h3")
+    conn = db.get_connection()
+    conn.execute("UPDATE jobs SET skill_score=70, status='qualified' WHERE id=?", (job_id,))
+    conn.commit()
+    conn.close()
+    db.create_manual_application(job_id)
+    jobs = db.get_qualified_jobs()
+    titles = [j["title"] for j in jobs]
+    assert "Dev C" not in titles
