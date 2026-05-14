@@ -1,0 +1,100 @@
+import hashlib
+import requests
+from bs4 import BeautifulSoup
+from app.tracking.db import insert_job
+
+BASE_URL = "https://www.myjobmag.co.ke"
+LISTINGS_URL = f"{BASE_URL}/jobs-in-kenya"
+
+RELEVANT_KEYWORDS = [
+    "python", "data analyst", "data engineer", "software engineer",
+    "software developer", "automation", "ai", "machine learning",
+    "backend", "full stack", "fullstack", "api", "sql", "developer",
+]
+
+PAGES = 3
+
+
+def make_hash(title, company, url):
+    raw = f"{title.lower().strip()}{company.lower().strip()}{url.strip()}"
+    return hashlib.sha256(raw.encode()).hexdigest()
+
+
+def is_relevant(title):
+    return any(kw in title.lower() for kw in RELEVANT_KEYWORDS)
+
+
+def run():
+    """Scrape MyJobMag Kenya and save relevant jobs to DB."""
+    print("Starting MyJobMag scraper...")
+    total_new = 0
+    total_dupes = 0
+    total_skipped = 0
+
+    for page in range(1, PAGES + 1):
+        url = f"{LISTINGS_URL}?page={page}"
+        print(f"  Fetching page {page}: {url}")
+        try:
+            resp = requests.get(url, timeout=20, headers={"User-Agent": "Mozilla/5.0"})
+            resp.raise_for_status()
+        except Exception as e:
+            print(f"  Error fetching page {page}: {e}")
+            continue
+
+        soup = BeautifulSoup(resp.text, "html.parser")
+        items = soup.select(".job-list-item, .job_listing, article.job_listing")
+
+        if not items:
+            items = soup.find_all("li", class_=lambda c: c and "job" in c.lower())
+
+        print(f"  Found {len(items)} listings")
+
+        for item in items:
+            title_tag = item.find(["h2", "h3", "h4"]) or item.find(class_=lambda c: c and "title" in str(c).lower())
+            if not title_tag:
+                continue
+            title = title_tag.get_text(strip=True)
+
+            if not is_relevant(title):
+                total_skipped += 1
+                continue
+
+            company_tag = item.find(class_=lambda c: c and "company" in str(c).lower())
+            company = company_tag.get_text(strip=True) if company_tag else "Unknown"
+
+            location_tag = item.find(class_=lambda c: c and "location" in str(c).lower())
+            location = location_tag.get_text(strip=True) if location_tag else "Kenya"
+
+            link_tag = title_tag.find("a") or item.find("a", href=True)
+            if not link_tag:
+                continue
+            href = link_tag.get("href", "")
+            job_url = href if href.startswith("http") else f"{BASE_URL}{href}"
+
+            jd_hash = make_hash(title, company, job_url)
+
+            job_id = insert_job(
+                source="myjobmag",
+                title=title,
+                company=company,
+                location=location,
+                remote_type="onsite",
+                apply_method="form",
+                apply_url=job_url,
+                jd_url=job_url,
+                jd_text="",
+                jd_hash=jd_hash,
+            )
+
+            if job_id:
+                print(f"    + Saved: {title} @ {company}")
+                total_new += 1
+            else:
+                total_dupes += 1
+
+    print(f"\nMyJobMag done: {total_new} new, {total_dupes} dupes, {total_skipped} irrelevant")
+    return total_new
+
+
+if __name__ == "__main__":
+    run()

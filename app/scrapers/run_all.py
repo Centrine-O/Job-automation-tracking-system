@@ -1,11 +1,11 @@
 """Run all scrapers in sequence and print a combined summary."""
-from app.scrapers import remotive, weworkremotely, google_jobs
+from app.scrapers import remotive, weworkremotely, google_jobs, myjobmag
 
 
 def run_all_scrapers() -> int:
     """Run all scrapers and return total new jobs found."""
     results = {}
-    for mod in [remotive, weworkremotely, google_jobs]:
+    for mod in [remotive, weworkremotely, google_jobs, myjobmag]:
         name = mod.__name__.split(".")[-1]
         try:
             new = mod.run()
@@ -23,7 +23,7 @@ def main():
 
     results = {}
 
-    for mod in [remotive, weworkremotely, google_jobs]:
+    for mod in [remotive, weworkremotely, google_jobs, myjobmag]:
         name = mod.__name__.split(".")[-1]
         print()
         try:
