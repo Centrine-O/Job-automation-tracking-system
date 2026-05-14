@@ -180,7 +180,9 @@ def api_queue():
 @app.post("/api/jobs/{job_id}/dismiss")
 def api_dismiss_job(job_id: int):
     from app.tracking.db import dismiss_job
-    dismiss_job(job_id)
+    rows = dismiss_job(job_id)
+    if rows == 0:
+        raise HTTPException(status_code=404, detail="Job not found")
     return {"ok": True}
 
 
@@ -198,7 +200,9 @@ def api_update_status(app_id: int, payload: UpdateStatusPayload):
     allowed = {"applied", "replied", "offer", "rejected", "ghosted"}
     if status not in allowed:
         raise HTTPException(status_code=400, detail=f"status must be one of {allowed}")
-    update_application_status(app_id, status)
+    rows = update_application_status(app_id, status)
+    if rows == 0:
+        raise HTTPException(status_code=404, detail="Application not found")
     return {"ok": True}
 
 
@@ -208,28 +212,37 @@ def api_update_notes(app_id: int, payload: UpdateNotesPayload):
     notes = payload.notes
     conn = get_connection()
     try:
-        conn.execute("UPDATE applications SET notes=? WHERE id=?", (notes, app_id))
+        cursor = conn.execute("UPDATE applications SET notes=? WHERE id=?", (notes, app_id))
         conn.commit()
+        if cursor.rowcount == 0:
+            raise HTTPException(status_code=404, detail="Application not found")
     finally:
         conn.close()
     return {"ok": True}
 
 
 @app.get("/api/history")
-def api_history(status: str = "", method: str = ""):
+def api_history(status: str = ""):
     conn = get_connection()
-    rows = conn.execute("""
-        SELECT a.id, a.job_id, a.status, a.submitted_at, a.notes,
-               j.title, j.company, j.apply_url, j.source, j.skill_score
-        FROM applications a
-        JOIN jobs j ON j.id = a.job_id
-        ORDER BY a.submitted_at DESC
-    """).fetchall()
-    conn.close()
-    apps = [dict(r) for r in rows]
     if status:
-        apps = [a for a in apps if a["status"] == status]
-    return apps
+        rows = conn.execute("""
+            SELECT a.id, a.job_id, a.status, a.submitted_at, a.notes,
+                   j.title, j.company, j.apply_url, j.source, j.skill_score
+            FROM applications a
+            JOIN jobs j ON j.id = a.job_id
+            WHERE a.status = ?
+            ORDER BY a.submitted_at DESC
+        """, (status,)).fetchall()
+    else:
+        rows = conn.execute("""
+            SELECT a.id, a.job_id, a.status, a.submitted_at, a.notes,
+                   j.title, j.company, j.apply_url, j.source, j.skill_score
+            FROM applications a
+            JOIN jobs j ON j.id = a.job_id
+            ORDER BY a.submitted_at DESC
+        """).fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
 
 
 @app.post("/run-now")

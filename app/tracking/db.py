@@ -131,12 +131,13 @@ def get_qualified_jobs():
     return [dict(r) for r in rows]
 
 
-def dismiss_job(job_id: int) -> None:
-    """Mark a job as dismissed — removes it from the Queue."""
+def dismiss_job(job_id: int) -> int:
+    """Mark a job as dismissed. Returns number of rows updated (0 if not found)."""
     conn = get_connection()
     try:
-        conn.execute("UPDATE jobs SET status='dismissed' WHERE id=?", (job_id,))
+        cursor = conn.execute("UPDATE jobs SET status='dismissed' WHERE id=?", (job_id,))
         conn.commit()
+        return cursor.rowcount
     finally:
         conn.close()
 
@@ -196,14 +197,17 @@ def get_applications_due_followup(day: int):
     return [dict(r) for r in rows]
 
 
-def update_application_status(app_id, status):
-    """Update the status of an application."""
+def update_application_status(app_id, status) -> int:
+    """Update the status of an application. Returns number of rows updated (0 if not found)."""
     conn = get_connection()
-    conn.execute(
-        "UPDATE applications SET status=? WHERE id=?", (status, app_id)
-    )
-    conn.commit()
-    conn.close()
+    try:
+        cursor = conn.execute(
+            "UPDATE applications SET status=? WHERE id=?", (status, app_id)
+        )
+        conn.commit()
+        return cursor.rowcount
+    finally:
+        conn.close()
 
 
 def count_applications_today():
