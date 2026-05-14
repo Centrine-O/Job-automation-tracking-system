@@ -31,10 +31,10 @@ def test_run_returns_count():
 
     with patch("app.scrapers.linkedin.requests.get", return_value=mock_resp), \
          patch("app.scrapers.linkedin.settings.serpapi_key", "TESTKEY"), \
-         patch("app.scrapers.linkedin.insert_job", side_effect=[1, 0, 0, 0, 0, 0]) as mock_insert:
+         patch("app.scrapers.linkedin.insert_job", side_effect=[1, None, None, None, None, None]) as mock_insert:
         from app.scrapers import linkedin
         count = linkedin.run()
-        assert count == 1  # only "Senior Data Engineer" is relevant, detected as duplicate on retries
+        assert count == 1  # only "Senior Data Engineer" is relevant, subsequent calls return None (duplicates)
         assert mock_insert.called
 
 
@@ -59,3 +59,30 @@ def test_skips_when_no_key():
         count = linkedin.run()
         assert count == 0
         assert not mock_get.called
+
+
+def test_fallback_url_uses_view_path():
+    sample_no_apply = {
+        "jobs_results": [
+            {
+                "title": "Senior Data Engineer",
+                "company_name": "Safaricom",
+                "location": "Nairobi, Kenya",
+                "description": "Python data engineer role",
+                "apply_options": [],
+                "job_id": "linkedin_999",
+            }
+        ]
+    }
+    mock_resp = MagicMock()
+    mock_resp.json.return_value = sample_no_apply
+    mock_resp.raise_for_status = MagicMock()
+
+    with patch("app.scrapers.linkedin.requests.get", return_value=mock_resp), \
+         patch("app.scrapers.linkedin.settings.serpapi_key", "TESTKEY"), \
+         patch("app.scrapers.linkedin.insert_job", return_value=1) as mock_insert:
+        from app.scrapers import linkedin
+        linkedin.run()
+        assert mock_insert.called
+        call_kwargs = mock_insert.call_args.kwargs
+        assert "jobs/view/linkedin_999" in call_kwargs["apply_url"]

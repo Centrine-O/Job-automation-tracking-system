@@ -71,7 +71,14 @@ def run():
 
             apply_options = job.get("apply_options", [])
             apply_link = apply_options[0].get("link") if apply_options else None
-            job_url = apply_link or f"https://www.linkedin.com/jobs/search?q={job.get('job_id','')}"
+            if apply_link:
+                job_url = apply_link
+            elif job.get("job_id"):
+                job_url = f"https://www.linkedin.com/jobs/view/{job['job_id']}"
+            else:
+                print(f"    Skipping '{title}' — no apply link or job ID")
+                total_skipped += 1
+                continue
 
             if not is_relevant(title, description):
                 total_skipped += 1
