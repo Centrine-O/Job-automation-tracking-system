@@ -5,6 +5,7 @@ from pathlib import Path
 
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import JSONResponse
+from pydantic import BaseModel
 
 from app.config import settings
 from app.scheduler import build_scheduler
@@ -13,6 +14,13 @@ from app.tracking.db import (
     get_notifications, count_unread_notifications, mark_notifications_read,
 )
 from app import state
+
+# Pydantic request models
+class UpdateStatusPayload(BaseModel):
+    status: str
+
+class UpdateNotesPayload(BaseModel):
+    notes: str
 
 app = FastAPI(title="Job Automation Dashboard")
 
@@ -121,22 +129,22 @@ def api_unread_count():
 @app.get("/api/stats")
 def api_stats():
     conn = get_connection()
-    total_jobs   = conn.execute("SELECT COUNT(*) as c FROM jobs").fetchone()["c"]
-    qualified    = conn.execute("SELECT COUNT(*) as c FROM jobs WHERE status='qualified'").fetchone()["c"]
-    needs_review = conn.execute("SELECT COUNT(*) as c FROM jobs WHERE status='needs_review'").fetchone()["c"]
-    total_applied = conn.execute("SELECT COUNT(*) as c FROM applications WHERE status='applied'").fetchone()["c"]
-    replied      = conn.execute("SELECT COUNT(*) as c FROM applications WHERE status='replied'").fetchone()["c"]
-    conn.close()
+    try:
+        total_jobs     = conn.execute("SELECT COUNT(*) FROM jobs").fetchone()[0]
+        qualified      = conn.execute("SELECT COUNT(*) FROM jobs WHERE status='qualified'").fetchone()[0]
+        dismissed      = conn.execute("SELECT COUNT(*) FROM jobs WHERE status='dismissed'").fetchone()[0]
+        total_applied  = conn.execute("SELECT COUNT(*) FROM applications").fetchone()[0]
+        replied        = conn.execute("SELECT COUNT(*) FROM applications WHERE status='replied'").fetchone()[0]
+        offers         = conn.execute("SELECT COUNT(*) FROM applications WHERE status='offer'").fetchone()[0]
+    finally:
+        conn.close()
     return {
         "total_jobs": total_jobs,
         "qualified": qualified,
-        "applied_today": count_applications_today(),
-        "max_per_day": settings.max_applications_per_day,
+        "dismissed": dismissed,
         "total_applied": total_applied,
-        "needs_review": needs_review,
         "replied": replied,
-        "dry_run": settings.dry_run,
-        "now": datetime.now().strftime("%Y-%m-%d %H:%M"),
+        "offers": offers,
     }
 
 
@@ -169,23 +177,58 @@ def api_queue():
     return [dict(r) for r in rows]
 
 
+@app.post("/api/jobs/{job_id}/dismiss")
+def api_dismiss_job(job_id: int):
+    from app.tracking.db import dismiss_job
+    dismiss_job(job_id)
+    return {"ok": True}
+
+
+@app.post("/api/jobs/{job_id}/apply")
+def api_apply_job(job_id: int):
+    from app.tracking.db import create_manual_application
+    app_id = create_manual_application(job_id)
+    return {"ok": True, "application_id": app_id}
+
+
+@app.patch("/api/applications/{app_id}/status")
+def api_update_status(app_id: int, payload: UpdateStatusPayload):
+    from app.tracking.db import update_application_status
+    status = payload.status
+    allowed = {"applied", "replied", "offer", "rejected", "ghosted"}
+    if status not in allowed:
+        raise HTTPException(status_code=400, detail=f"status must be one of {allowed}")
+    update_application_status(app_id, status)
+    return {"ok": True}
+
+
+@app.patch("/api/applications/{app_id}/notes")
+def api_update_notes(app_id: int, payload: UpdateNotesPayload):
+    from app.tracking.db import get_connection
+    notes = payload.notes
+    conn = get_connection()
+    try:
+        conn.execute("UPDATE applications SET notes=? WHERE id=?", (notes, app_id))
+        conn.commit()
+    finally:
+        conn.close()
+    return {"ok": True}
+
+
 @app.get("/api/history")
 def api_history(status: str = "", method: str = ""):
     conn = get_connection()
     rows = conn.execute("""
-        SELECT a.id, a.submitted_at, a.submission_method as apply_method,
-               a.status, a.ats_score, a.cv_path, a.notes,
-               a.follow_up_21_at, a.follow_up_30_at,
-               j.title, j.company, j.skill_score
-        FROM applications a JOIN jobs j ON j.id = a.job_id
+        SELECT a.id, a.job_id, a.status, a.submitted_at, a.notes,
+               j.title, j.company, j.apply_url, j.source, j.skill_score
+        FROM applications a
+        JOIN jobs j ON j.id = a.job_id
         ORDER BY a.submitted_at DESC
     """).fetchall()
     conn.close()
     apps = [dict(r) for r in rows]
     if status:
         apps = [a for a in apps if a["status"] == status]
-    if method:
-        apps = [a for a in apps if (a["apply_method"] or "").lower() == method.lower()]
     return apps
 
 
