@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { getHistory, updateStatus, updateNotes } from '@/lib/api'
 
 const STATUSES = ['applied', 'replied', 'offer', 'rejected', 'ghosted']
@@ -56,11 +56,19 @@ function NotesField({ appId, initial }) {
   const [notes, setNotes] = useState(initial || '')
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState(null)
+  const savedRef = useRef(initial || '')
+
+  useEffect(() => {
+    setNotes(initial || '')
+    savedRef.current = initial || ''
+  }, [appId])
 
   async function handleBlur() {
+    if (notes === savedRef.current) return
     setError(null)
     try {
       await updateNotes(appId, notes)
+      savedRef.current = notes
       setSaved(true)
       setTimeout(() => setSaved(false), 1500)
     } catch {
