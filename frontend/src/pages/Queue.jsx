@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react'
-import JobCard from '@/components/JobCard'
-import { getQueue } from '@/lib/api'
+import { getQueue, dismissJob, applyJob } from '@/lib/api'
 
 export default function Queue() {
-  const [jobs, setJobs]   = useState([])
-  const [error, setError] = useState(null)
-  const [loading, setLoading] = useState(true)
+  const [jobs, setJobs]         = useState([])
+  const [selected, setSelected] = useState(null)
+  const [loading, setLoading]   = useState(true)
+  const [error, setError]       = useState(null)
 
   useEffect(() => {
     getQueue()
@@ -15,32 +15,125 @@ export default function Queue() {
 
   function removeJob(id) {
     setJobs(prev => prev.filter(j => j.id !== id))
+    if (selected?.id === id) setSelected(null)
+  }
+
+  async function handleDismiss(job) {
+    await dismissJob(job.id)
+    removeJob(job.id)
+  }
+
+  async function handleApply(job) {
+    await applyJob(job.id)
+    removeJob(job.id)
   }
 
   if (loading) return <p className="font-mono text-onyx-dim text-sm animate-pulse">Loading…</p>
   if (error)   return <p className="font-serif text-red-600">{error}</p>
 
   return (
-    <div className="space-y-6">
-      <h1 className="font-serif text-3xl font-bold text-onyx">Review Queue</h1>
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h1 className="font-serif text-3xl font-bold text-onyx">Review Queue</h1>
+        <span className="font-mono text-xs text-onyx-dim">{jobs.length} qualified</span>
+      </div>
 
-      {jobs.length > 0 ? (
-        <>
-          <div className="flex items-center gap-3 p-4 rounded-lg bg-red-50 border border-red-100">
-            <span className="font-mono text-[10px] tracking-widest text-red-600 uppercase">
-              {jobs.length} {jobs.length === 1 ? 'job requires' : 'jobs require'} attention
-            </span>
-          </div>
-          <div className="grid gap-4">
-            {jobs.map(job => (
-              <JobCard key={job.id} job={job} onRemove={removeJob} />
-            ))}
-          </div>
-        </>
-      ) : (
+      {jobs.length === 0 ? (
         <div className="bg-white rounded-lg border border-bone-2 p-12 text-center">
           <p className="font-serif text-xl text-onyx-dim">Queue is clear.</p>
-          <p className="font-mono text-xs text-onyx-dim/60 mt-2">All jobs processed successfully.</p>
+          <p className="font-mono text-xs text-onyx-dim/60 mt-2">Check back after the next scrape.</p>
+        </div>
+      ) : (
+        <div className="flex gap-4 h-[calc(100vh-160px)]">
+
+          {/* Job list */}
+          <div className="w-80 flex-shrink-0 overflow-y-auto space-y-2 pr-1">
+            {jobs.map(job => (
+              <button
+                key={job.id}
+                onClick={() => setSelected(job)}
+                className={`w-full text-left rounded-lg border px-4 py-3 transition-colors ${
+                  selected?.id === job.id
+                    ? 'border-olive bg-olive/5'
+                    : 'border-bone-2 bg-white hover:border-bone-3'
+                }`}
+              >
+                <p className="font-serif text-sm font-semibold text-onyx leading-tight truncate">{job.title}</p>
+                <p className="font-mono text-xs text-onyx-dim mt-0.5 truncate">{job.company}</p>
+                <div className="flex items-center gap-2 mt-1.5">
+                  <span className="font-mono text-[10px] bg-olive/10 text-olive px-1.5 py-0.5 rounded">
+                    {job.skill_score}%
+                  </span>
+                  {job.remote_type && (
+                    <span className="font-mono text-[10px] text-onyx-dim/60">{job.remote_type}</span>
+                  )}
+                </div>
+              </button>
+            ))}
+          </div>
+
+          {/* Detail panel */}
+          <div className="flex-1 overflow-y-auto">
+            {selected ? (
+              <div className="bg-white rounded-lg border border-bone-2 p-6 space-y-5">
+                <div>
+                  <h2 className="font-serif text-2xl font-bold text-onyx">{selected.title}</h2>
+                  <p className="font-mono text-sm text-onyx-dim mt-1">
+                    {selected.company}
+                    {selected.location ? ` · ${selected.location}` : ''}
+                    {selected.salary_range ? ` · ${selected.salary_range}` : ''}
+                  </p>
+                  <div className="flex items-center gap-2 mt-2">
+                    <span className="font-mono text-xs bg-olive/10 text-olive border border-olive/20 px-2 py-0.5 rounded">
+                      Score {selected.skill_score}%
+                    </span>
+                    <span className="font-mono text-xs text-onyx-dim/60 uppercase tracking-wide">
+                      {selected.source}
+                    </span>
+                  </div>
+                </div>
+
+                {selected.jd_text && (
+                  <div>
+                    <p className="font-mono text-[10px] text-onyx-dim/60 uppercase tracking-widest mb-2">Description</p>
+                    <p className="font-mono text-xs text-onyx-dim leading-relaxed line-clamp-6">
+                      {selected.jd_text.slice(0, 400)}{selected.jd_text.length > 400 ? '…' : ''}
+                    </p>
+                  </div>
+                )}
+
+                <div className="flex gap-3 pt-2">
+                  {selected.apply_url && (
+                    <a
+                      href={selected.apply_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-mono text-xs bg-olive text-bone px-4 py-2 rounded border border-olive hover:bg-olive/90 transition-colors"
+                    >
+                      Open Job ↗
+                    </a>
+                  )}
+                  <button
+                    onClick={() => handleApply(selected)}
+                    className="font-mono text-xs bg-onyx text-bone px-4 py-2 rounded border border-onyx hover:bg-onyx/90 transition-colors"
+                  >
+                    Mark Applied ✓
+                  </button>
+                  <button
+                    onClick={() => handleDismiss(selected)}
+                    className="font-mono text-xs text-onyx-dim px-4 py-2 rounded border border-bone-2 hover:border-onyx-dim hover:text-onyx transition-colors"
+                  >
+                    Dismiss
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="bg-white rounded-lg border border-bone-2 p-12 text-center h-full flex items-center justify-center">
+                <p className="font-mono text-xs text-onyx-dim/60">Select a job to review</p>
+              </div>
+            )}
+          </div>
+
         </div>
       )}
     </div>
