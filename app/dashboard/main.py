@@ -105,42 +105,6 @@ def shutdown():
 
 # ── Routes ─────────────────────────────────────────────────────────────────────
 
-@app.post("/apply/{job_id}")
-def re_trigger(job_id: int):
-    """Re-trigger Playwright for a needs_review job."""
-    conn = get_connection()
-    job = conn.execute(
-        "SELECT * FROM jobs WHERE id=? AND status='needs_review'", (job_id,)
-    ).fetchone()
-    conn.close()
-
-    if not job:
-        raise HTTPException(status_code=404, detail="Job not found or not in needs_review state")
-
-    job = dict(job)
-    from app.cv.engine import tailor, extract_keywords
-    from app.cv.renderer import render
-    from app.submission import cover_letter as cl_gen
-    from app.submission.form_filler import submit
-
-    tailored = tailor(
-        job_id=job["id"],
-        title=job["title"],
-        company=job["company"],
-        jd_text=job.get("jd_text", ""),
-    )
-    paths = render(tailored)
-    cl_text = cl_gen.generate(
-        job_id=job["id"],
-        title=job["title"],
-        company=job["company"],
-        keywords=tailored["keywords"],
-    )
-    job_with_kw = {**job, "keywords": tailored["keywords"]}
-    result = submit(job=job_with_kw, cv_path=paths["pdf"], cover_letter_text=cl_text)
-    return JSONResponse(result)
-
-
 @app.get("/api/notifications")
 def api_notifications():
     notes = get_notifications(limit=20)
@@ -225,20 +189,6 @@ def api_history(status: str = "", method: str = ""):
     return apps
 
 
-@app.post("/mark-applied/{job_id}")
-def mark_applied(job_id: int):
-    """Mark a needs_review job as applied after manual submission."""
-    conn = get_connection()
-    conn.execute("UPDATE jobs SET status='applied' WHERE id=?", (job_id,))
-    conn.execute(
-        "UPDATE applications SET status='applied', submitted_at=? WHERE job_id=? AND status='needs_review'",
-        (datetime.utcnow().isoformat(), job_id)
-    )
-    conn.commit()
-    conn.close()
-    return {"ok": True}
-
-
 @app.post("/run-now")
 def run_now():
     """Manually trigger the pipeline immediately."""
@@ -258,16 +208,6 @@ def run_now():
 @app.post("/api/run-now")
 def api_run_now():
     return run_now()
-
-
-@app.post("/api/apply/{job_id}")
-def api_re_trigger(job_id: int):
-    return re_trigger(job_id)
-
-
-@app.post("/api/mark-applied/{job_id}")
-def api_mark_applied(job_id: int):
-    return mark_applied(job_id)
 
 
 @app.get("/api/system/status")

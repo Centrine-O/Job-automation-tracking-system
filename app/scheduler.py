@@ -33,10 +33,6 @@ _STAGE_KEYS = {
     "Scorer":  "scoring",
 }
 
-_INTERVIEW_RE = re.compile(
-    r'\b(interview|schedule|call|meet|availability|discuss)\b', re.IGNORECASE
-)
-
 
 def _run(label: str, fn):
     """Run a pipeline step, catch and log all exceptions."""
