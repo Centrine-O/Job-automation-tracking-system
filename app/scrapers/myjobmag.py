@@ -1,4 +1,6 @@
 import hashlib
+import time
+import random
 import requests
 from bs4 import BeautifulSoup
 from app.tracking.db import insert_job
@@ -42,6 +44,7 @@ def run():
             continue
 
         soup = BeautifulSoup(resp.text, "html.parser")
+        time.sleep(random.uniform(1, 3))
         items = soup.select(".job-list-item, .job_listing, article.job_listing")
 
         if not items:
@@ -65,7 +68,7 @@ def run():
             location_tag = item.find(class_=lambda c: c and "location" in str(c).lower())
             location = location_tag.get_text(strip=True) if location_tag else "Kenya"
 
-            link_tag = title_tag.find("a") or item.find("a", href=True)
+            link_tag = title_tag.find("a", href=True) or item.find("a", href=True)
             if not link_tag:
                 continue
             href = link_tag.get("href", "")

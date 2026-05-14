@@ -30,7 +30,7 @@ def test_run_returns_count():
          patch("app.scrapers.myjobmag.insert_job", return_value=1) as mock_insert:
         from app.scrapers import myjobmag
         count = myjobmag.run()
-        assert count >= 0
+        assert count == 3
         assert mock_insert.called
 
 
@@ -43,8 +43,6 @@ def test_irrelevant_jobs_skipped():
     with patch("app.scrapers.myjobmag.requests.get", return_value=mock_resp), \
          patch("app.scrapers.myjobmag.insert_job", return_value=1) as mock_insert:
         from app.scrapers import myjobmag
-        import importlib
-        importlib.reload(myjobmag)
         myjobmag.run()
         calls = [str(c) for c in mock_insert.call_args_list]
         assert not any("Marketing" in c for c in calls)
