@@ -3,26 +3,14 @@ import { motion } from 'framer-motion'
 import { getSystemStatus, getSystemHealth } from '@/lib/api'
 
 const STAGE_LABELS = {
-  idle:               'Idle',
-  scraping:           'Scraping Jobs',
-  scoring:            'Scoring Jobs',
-  generating_cvs:     'Generating CVs',
-  submitting:         'Submitting',
-  detecting_replies:  'Detecting Replies',
-  checking_followups: 'Checking Follow-ups',
-  marking_ghosted:    'Marking Ghosted',
-  sending_digest:     'Daily Digest',
+  idle:     'Idle',
+  scraping: 'Scraping Jobs',
+  scoring:  'Scoring Jobs',
 }
 
 const PIPELINE_STEPS = [
-  { key: 'scraping',           label: 'Scrape' },
-  { key: 'scoring',            label: 'Score' },
-  { key: 'generating_cvs',     label: 'Gen CVs' },
-  { key: 'submitting',         label: 'Submit' },
-  { key: 'detecting_replies',  label: 'Replies' },
-  { key: 'checking_followups', label: 'Follow-up' },
-  { key: 'marking_ghosted',    label: 'Ghosted' },
-  { key: 'sending_digest',     label: 'Digest' },
+  { key: 'scraping', label: 'Scrape' },
+  { key: 'scoring',  label: 'Score' },
 ]
 
 const SVC = {
