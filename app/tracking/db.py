@@ -1,6 +1,6 @@
 import sqlite3
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 DB_PATH = Path("data/jobs.db")
@@ -9,6 +9,7 @@ DB_PATH = Path("data/jobs.db")
 def get_connection():
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
+    conn.execute("PRAGMA foreign_keys = ON")
     return conn
 
 
@@ -155,7 +156,7 @@ def insert_application(job_id, cv_path, cover_letter_path,
              submitted_at, submission_method, status)
         VALUES (?, ?, ?, ?, ?, ?, 'applied')
     """, (job_id, cv_path, cover_letter_path, ats_score,
-          datetime.utcnow().isoformat(), submission_method))
+          datetime.now(timezone.utc).isoformat(), submission_method))
     conn.execute(
         "UPDATE jobs SET status='applied' WHERE id=?", (job_id,)
     )
@@ -171,7 +172,7 @@ def create_manual_application(job_id: int) -> int:
     try:
         cursor = conn.execute(
             "INSERT INTO applications (job_id, submitted_at, status) VALUES (?, ?, 'applied')",
-            (job_id, datetime.utcnow().isoformat()),
+            (job_id, datetime.now(timezone.utc).isoformat()),
         )
         app_id = cursor.lastrowid
         conn.execute("UPDATE jobs SET status='applied' WHERE id=?", (job_id,))

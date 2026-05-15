@@ -1,6 +1,6 @@
 """FastAPI dashboard — serves the UI. Scheduler is managed by app/scheduler.py."""
 import threading
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException
@@ -85,7 +85,7 @@ def _refresh_health():
     try:
         services = _check_health()
         state.health_cache.update({
-            "checked_at": datetime.utcnow().isoformat(),
+            "checked_at": datetime.now(timezone.utc).isoformat(),
             "services": services,
         })
     except Exception:
@@ -166,11 +166,9 @@ def api_applications():
 def api_queue():
     conn = get_connection()
     rows = conn.execute("""
-        SELECT j.id, j.title, j.company, j.apply_url, j.skill_score, j.hire_score,
-               a.notes
+        SELECT j.id, j.title, j.company, j.apply_url, j.skill_score, j.hire_score
         FROM jobs j
-        LEFT JOIN applications a ON a.job_id = j.id AND a.status = 'needs_review'
-        WHERE j.status = 'needs_review'
+        WHERE j.status = 'qualified'
         ORDER BY j.skill_score DESC
     """).fetchall()
     conn.close()
@@ -288,7 +286,7 @@ def api_system_status():
     return {
         "pipeline": state.snapshot(),
         "scheduled": scheduled,
-        "now": datetime.utcnow().isoformat(),
+        "now": datetime.now(timezone.utc).isoformat(),
     }
 
 
