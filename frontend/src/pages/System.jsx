@@ -47,23 +47,35 @@ export default function System() {
   const [health, setHealth] = useState(null)
   const [error,  setError]  = useState(null)
 
-  const fetchAll = useCallback(async () => {
+  const fetchStatus = useCallback(async () => {
     try {
-      const [s, h] = await Promise.all([getSystemStatus(), getSystemHealth()])
-      setStatus(s); setHealth(h); setError(null)
+      const s = await getSystemStatus()
+      setStatus(s); setError(null)
+    } catch (e) { setError(e.message) }
+  }, [])
+
+  const fetchHealth = useCallback(async () => {
+    try {
+      const h = await getSystemHealth()
+      setHealth(h); setError(null)
     } catch (e) { setError(e.message) }
   }, [])
 
   useEffect(() => {
-    fetchAll()
-    const id = setInterval(fetchAll, 5000)
+    // Fetch both on mount
+    Promise.all([getSystemStatus(), getSystemHealth()])
+      .then(([s, h]) => { setStatus(s); setHealth(h); setError(null) })
+      .catch(e => setError(e.message))
+
+    // Poll status every 5s, but not health (it only refreshes every 60s)
+    const id = setInterval(fetchStatus, 5000)
     return () => clearInterval(id)
-  }, [fetchAll])
+  }, [fetchStatus])
 
   if (error && !status) return <p className="font-serif text-red-600">{error}</p>
   if (!status) return <p className="font-mono text-onyx-dim text-sm animate-pulse">Loading…</p>
 
-  const { pipeline, scheduled } = status
+  const { pipeline, scheduled = {} } = status
   const isActive = pipeline.stage !== 'idle'
 
   return (
