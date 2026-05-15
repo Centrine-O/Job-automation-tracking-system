@@ -1,0 +1,12 @@
+venv/
+__pycache__/
+*.pyc
+*.pyo
+.env
+data/gmail_credentials.json
+data/gmail_token.json
+data/jobs.db
+data/logs/
+frontend/node_modules/
+frontend/dist/
+.DS_Store
