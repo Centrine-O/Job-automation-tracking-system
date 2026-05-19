@@ -24,6 +24,18 @@ SEARCH_QUERIES = [
 ]
 
 
+def is_recent(posted_at):
+    """Return True if SerpAPI relative date string is within 24 hours."""
+    if not posted_at:
+        return True
+    s = posted_at.lower().strip()
+    if any(x in s for x in ["just now", "minute", "hour", "today", "active"]):
+        return True
+    if s == "1 day ago":
+        return True
+    return False
+
+
 def make_hash(title, company, url):
     raw = f"{title.lower().strip()}{company.lower().strip()}{url.strip()}"
     return hashlib.sha256(raw.encode()).hexdigest()
@@ -74,6 +86,11 @@ def run():
             continue
 
         for job in jobs_raw:
+            posted_at = (job.get("detected_extensions") or {}).get("posted_at", "")
+            if not is_recent(posted_at):
+                total_skipped += 1
+                continue
+
             title = (job.get("title") or "").strip()
             company = (job.get("company_name") or "").strip()
             location = (job.get("location") or "Kenya").strip()

@@ -2,8 +2,11 @@ import hashlib
 import time
 import random
 import requests
+from datetime import datetime, timezone, timedelta
 from bs4 import BeautifulSoup
 from app.tracking.db import insert_job
+
+_CUTOFF = timedelta(hours=24)
 
 BASE_URL = "https://www.myjobmag.co.ke"
 LISTINGS_URL = f"{BASE_URL}/jobs-in-kenya"
@@ -19,6 +22,37 @@ RELEVANT_KEYWORDS = [
 ]
 
 PAGES = 3
+
+
+def is_recent(item):
+    """
+    Try to read a posting date from the listing element.
+    Returns True if within 24 hours, or if no date is found (fail-open).
+    """
+    # <time datetime="2026-05-19T..."> is the most reliable
+    time_tag = item.find("time")
+    if time_tag:
+        dt_str = time_tag.get("datetime") or time_tag.get_text(strip=True)
+        try:
+            pub = datetime.fromisoformat(dt_str)
+            if pub.tzinfo is None:
+                pub = pub.replace(tzinfo=timezone.utc)
+            return datetime.now(timezone.utc) - pub <= _CUTOFF
+        except Exception:
+            pass
+
+    # Fallback: look for elements with "date" or "posted" in class/text
+    date_tag = item.find(class_=lambda c: c and any(x in str(c).lower() for x in ["date", "posted", "ago"]))
+    if date_tag:
+        text = date_tag.get_text(strip=True).lower()
+        if any(x in text for x in ["just now", "minute", "hour", "today"]):
+            return True
+        if "1 day" in text:
+            return True
+        if any(f"{n} day" in text for n in ["2", "3", "4", "5", "6", "7"]):
+            return False
+
+    return True  # no date found — don't filter out
 
 
 def make_hash(title, company, url):
@@ -61,6 +95,10 @@ def run():
             if not title_tag:
                 continue
             title = title_tag.get_text(strip=True)
+
+            if not is_recent(item):
+                total_skipped += 1
+                continue
 
             if not is_relevant(title):
                 total_skipped += 1

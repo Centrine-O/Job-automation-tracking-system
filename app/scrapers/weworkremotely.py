@@ -1,7 +1,11 @@
 import hashlib
 import xml.etree.ElementTree as ET
 import requests
+from datetime import datetime, timezone, timedelta
+from email.utils import parsedate_to_datetime
 from app.tracking.db import insert_job
+
+_CUTOFF = timedelta(hours=24)
 
 # We Work Remotely RSS feeds — one per category
 RSS_FEEDS = [
@@ -25,6 +29,16 @@ RELEVANT_KEYWORDS = [
     "gen ai", "genai", "langchain", "langgraph", "openai", "anthropic",
     "mlops", "ai ops", "rpa", "workflow automation", "n8n",
 ]
+
+
+def is_recent(pub_date_str):
+    if not pub_date_str:
+        return True
+    try:
+        pub = parsedate_to_datetime(pub_date_str)
+        return datetime.now(timezone.utc) - pub <= _CUTOFF
+    except Exception:
+        return True
 
 
 def make_hash(title, company, url):
@@ -54,11 +68,13 @@ def parse_feed(feed_url):
             link_el = item.find("link")
             desc_el = item.find("description")
             region_el = item.find("region")
+            pub_date_el = item.find("pubDate")
 
             title_raw = title_el.text if title_el is not None else ""
             link = link_el.text if link_el is not None else ""
             description = desc_el.text if desc_el is not None else ""
             region = region_el.text if region_el is not None else "Worldwide"
+            pub_date = pub_date_el.text if pub_date_el is not None else ""
 
             # WWR titles are formatted as "Company: Job Title"
             if ": " in title_raw:
@@ -79,6 +95,7 @@ def parse_feed(feed_url):
                 "location": region.strip() if region else "Worldwide",
                 "url": link.strip(),
                 "description": description,
+                "pub_date": pub_date,
             })
 
     except Exception as e:
@@ -100,6 +117,9 @@ def run():
         print(f"  Found {len(jobs)} jobs")
 
         for job in jobs:
+            if not is_recent(job.get("pub_date")):
+                total_skipped += 1
+                continue
             if not is_relevant(job["title"], job["description"]):
                 total_skipped += 1
                 continue

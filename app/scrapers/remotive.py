@@ -1,8 +1,10 @@
 import hashlib
 import requests
+from datetime import datetime, timezone, timedelta
 from app.tracking.db import insert_job
 
 API_URL = "https://remotive.com/api/remote-jobs"
+_CUTOFF = timedelta(hours=24)
 
 # Categories relevant to your target roles
 CATEGORIES = [
@@ -21,6 +23,18 @@ RELEVANT_KEYWORDS = [
     "gen ai", "genai", "langchain", "langgraph", "openai", "anthropic",
     "mlops", "ai ops", "rpa", "workflow automation", "n8n",
 ]
+
+
+def is_recent(publication_date_str):
+    if not publication_date_str:
+        return True
+    try:
+        pub = datetime.fromisoformat(publication_date_str)
+        if pub.tzinfo is None:
+            pub = pub.replace(tzinfo=timezone.utc)
+        return datetime.now(timezone.utc) - pub <= _CUTOFF
+    except Exception:
+        return True
 
 
 def make_hash(title, company, url):
@@ -61,6 +75,9 @@ def run():
             continue
 
         for job in jobs:
+            if not is_recent(job.get("publication_date")):
+                total_skipped += 1
+                continue
             if not is_relevant(job):
                 total_skipped += 1
                 continue
