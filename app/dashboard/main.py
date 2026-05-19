@@ -166,10 +166,19 @@ def api_applications():
 def api_queue():
     conn = get_connection()
     rows = conn.execute("""
-        SELECT j.id, j.title, j.company, j.apply_url, j.skill_score, j.hire_score
+        SELECT j.id, j.title, j.company, j.location, j.remote_type,
+               j.apply_url, j.jd_text, j.source, j.skill_score, j.hire_score
         FROM jobs j
         WHERE j.status = 'qualified'
-        ORDER BY j.skill_score DESC
+        ORDER BY
+            CASE j.source
+                WHEN 'myjobmag'    THEN 1
+                WHEN 'google_jobs' THEN 2
+                WHEN 'remotive'    THEN 3
+                WHEN 'jobicy'      THEN 4
+                ELSE                    5
+            END,
+            j.skill_score DESC
     """).fetchall()
     conn.close()
     return [dict(r) for r in rows]

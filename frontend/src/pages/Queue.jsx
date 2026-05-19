@@ -8,6 +8,22 @@ function normalizeUrl(raw) {
   return `https://${raw}`
 }
 
+const SOURCE_META = {
+  myjobmag:    { label: 'MyJobMag',    cls: 'bg-emerald-100 text-emerald-700 border-emerald-200' },
+  google_jobs: { label: 'Google Jobs', cls: 'bg-red-100    text-red-700    border-red-200'    },
+  remotive:    { label: 'Remotive',    cls: 'bg-violet-100 text-violet-700 border-violet-200' },
+  jobicy:      { label: 'Jobicy',      cls: 'bg-amber-100  text-amber-700  border-amber-200'  },
+}
+
+function SourceBadge({ source }) {
+  const meta = SOURCE_META[source] ?? { label: source, cls: 'bg-bone-2 text-onyx-dim border-bone-3' }
+  return (
+    <span className={`font-mono text-[10px] border px-1.5 py-0.5 rounded ${meta.cls}`}>
+      {meta.label}
+    </span>
+  )
+}
+
 export default function Queue() {
   const [jobs, setJobs]             = useState([])
   const [selectedId, setSelectedId] = useState(null)
@@ -89,7 +105,8 @@ export default function Queue() {
               >
                 <p className="font-serif text-sm font-semibold text-onyx leading-tight truncate">{job.title}</p>
                 <p className="font-mono text-xs text-onyx-dim mt-0.5 truncate">{job.company}</p>
-                <div className="flex items-center gap-2 mt-1.5">
+                <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                  <SourceBadge source={job.source} />
                   <span className="font-mono text-[10px] bg-olive/10 text-olive px-1.5 py-0.5 rounded">
                     {job.skill_score}%
                   </span>
@@ -113,11 +130,9 @@ export default function Queue() {
                     {selected.salary_range ? ` · ${selected.salary_range}` : ''}
                   </p>
                   <div className="flex items-center gap-2 mt-2">
+                    <SourceBadge source={selected.source} />
                     <span className="font-mono text-xs bg-olive/10 text-olive border border-olive/20 px-2 py-0.5 rounded">
                       Score {selected.skill_score}%
-                    </span>
-                    <span className="font-mono text-xs text-onyx-dim/60 uppercase tracking-wide">
-                      {selected.source}
                     </span>
                   </div>
                 </div>
