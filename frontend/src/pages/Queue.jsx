@@ -1,6 +1,13 @@
 import { useState, useEffect } from 'react'
 import { getQueue, dismissJob, applyJob } from '@/lib/api'
 
+function normalizeUrl(raw) {
+  if (!raw) return null
+  if (raw.startsWith('http://') || raw.startsWith('https://') || raw.startsWith('mailto:')) return raw
+  if (raw.includes('@')) return `mailto:${raw}`
+  return `https://${raw}`
+}
+
 export default function Queue() {
   const [jobs, setJobs]             = useState([])
   const [selectedId, setSelectedId] = useState(null)
@@ -127,8 +134,8 @@ export default function Queue() {
                 <div className="flex gap-3 pt-2">
                   {selected.apply_url && (
                     <a
-                      href={selected.apply_url}
-                      target="_blank"
+                      href={normalizeUrl(selected.apply_url)}
+                      target={selected.apply_url.includes('@') ? '_self' : '_blank'}
                       rel="noopener noreferrer"
                       className="font-mono text-xs bg-olive text-bone px-4 py-2 rounded border border-olive hover:bg-olive/90 transition-colors disabled:opacity-50 disabled:pointer-events-none"
                       aria-disabled={pending}

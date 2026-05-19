@@ -34,6 +34,8 @@ def detect_apply_method(apply_link):
         return "unknown", None
     if apply_link.startswith("mailto:"):
         return "email", apply_link
+    if "@" in apply_link and not apply_link.startswith("http"):
+        return "email", f"mailto:{apply_link}"
     return "form", apply_link
 
 
