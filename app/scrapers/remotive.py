@@ -16,6 +16,10 @@ RELEVANT_KEYWORDS = [
     "python", "data analyst", "data engineer", "software engineer",
     "software developer", "automation", "ai", "machine learning",
     "backend", "full stack", "fullstack", "api", "sql",
+    "ai engineer", "artificial intelligence", "agentic", "agent",
+    "llm", "large language model", "prompt engineer", "generative ai",
+    "gen ai", "genai", "langchain", "langgraph", "openai", "anthropic",
+    "mlops", "ai ops", "rpa", "workflow automation", "n8n",
 ]
 
 

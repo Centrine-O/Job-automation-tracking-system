@@ -14,6 +14,13 @@ SEARCH_QUERIES = [
     "data engineer jobs in Nairobi Kenya",
     "remote data analyst jobs Kenya",
     "remote software engineer Kenya",
+    "AI engineer jobs Nairobi Kenya",
+    "automation engineer jobs Kenya",
+    "machine learning engineer Kenya",
+    "prompt engineer remote",
+    "LLM engineer remote",
+    "agentic AI developer remote",
+    "AI automation developer remote",
 ]
 
 
